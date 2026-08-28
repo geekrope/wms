@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="vis_styles.css">
+    <link rel="stylesheet" href="src/modules/github.min.css">
+    <script src="src/modules/sql-wasm.js"></script>
+    <script src="src/modules/vis-network.min.js"></script>
+    <script src="src/modules/highlight.min.js"></script>
+    <script src="src/modules/sql.min.js"></script>
+    <script src="src/modules/math.js"></script>
+    <script src="src/modules/statistics.min.js"></script>
+    <script src="src/modules/plotly.min.js"></script>
+    <script src="src/modules/tex-svg.js"></script>
+</head>
+
+<body>
+    <header>
+        <div class="header-content">
+            <h1>📦 <span data-locale="version"></span></h1>
+            <nav class="nav-tabs">
+                <button class="nav-tab active" data-page="intake">📥 <span
+                        data-locale="page_title_intake"></span></button>
+                <button class="nav-tab" data-page="item_management">🏬 <span
+                        data-locale="page_title_storage"></span></button>
+                <button class="nav-tab" data-page="category_management">🏷️ <span
+                        data-locale="page_title_categories"></span></button>
+                <button class="nav-tab" data-page="boxes_management">🗃️ <span
+                        data-locale="page_title_boxes"></span></button>
+                <button class="nav-tab" data-page="backup">💾 <span data-locale="page_title_restore"></span></button>
+                <button class="nav-tab" data-page="dashboard">💻 <span
+                        data-locale="page_title_dashboard"></span></button>
+                <button class="nav-tab" data-page="stats">📊 <span data-locale="page_title_stats"></span></button>
+            </nav>
+        </div>
+    </header>
+
+    <div class="main-wrapper">
+        <main class="container">
+            <!-- ITEM INTAKE PAGE -->
+            <div id="intake" class="page active">
+                <div class="card" id="intakeCard">
+                    <h2>📥 <span data-locale="header_main"></span></h2>
+                </div>
+
+                <div class="card">
+                    <div id="intakeLog" class="log-area">
+                    </div>
+                </div>
+            </div>
+
+            <!-- STORAGE VIEW PAGE -->
+            <div id="item_management" class="page">
+                <div class="card" id="storageFilterCard">
+                    <h2>🏬 <span data-locale="header_storage"></span></h2>
+                </div>
+
+                <div class="card">
+                    <h2>🏷️ <span id="itemCategory"></span> </h2>
+                    <h2>🔢 <span id="itemCount"></span> </h2>
+                    <div id="itemsList" class="items-list"></div>
+
+                    <div class="pagination-controls" id="paginationControls">
+                        <button class="btn-pagination" id="prevPageBtn">⬅️</button>
+                        <span id="pageIndicator" class="page-info"></span>
+                        <button class="btn-pagination" id="nextPageBtn">➡️</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div id="storageLog" class="log-area">
+                    </div>
+                </div>
+            </div>
+
+            <!-- CATEGORIES MANAGEMENT PAGE -->
+            <div id="category_management" class="page">
+                <div class="card" id="categoryCard">
+                    <h2>✨ <span data-locale="header_categories"></span></h2>
+                </div>
+
+                <div class="card">
+                    <h2>📋 <span data-locale="categories_list_header"></span></h2>
+                    <div id="categoriesList" class="items-list" style="min-height: auto;"></div>
+                </div>
+
+                <div class="card">
+                    <div id="categoriesLog" class="log-area">
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOXES MANAGEMENT PAGE -->
+            <div id="boxes_management" class="page">
+                <div class="card" id="boxAddCard">
+                    <h2>➕ <span data-locale="header_box_add"></span></h2>
+                </div>
+
+                <div class="card" id="boxesCard">
+                    <h2>🗃️ <span data-locale="header_boxes"></span></h2>
+                    <div id="boxesContainer" class="boxes-container"></div>
+                </div>
+
+                <div class="card" id="boxesGraphCard">
+                    <h2>🕸️ <span data-locale="header_boxes_graph"></span></h2>
+                    <div id="boxesGraphContainer" class="graph-container"></div>
+                    <div id="boxesWeightsTableContainer" class="weights-table-container"></div>
+                </div>
+
+                <div class="card">
+                    <div id="boxesLog" class="log-area"></div>
+                </div>
+            </div>
+
+            <!-- BACKUP & RESTORE PAGE -->
+            <div id="backup" class="page">
+                <div class="card">
+                    <h2>💾 <span data-locale="header_restore"></span></h2>
+                    <p style="color: #7f8c8d; margin-bottom: 20px;"></p>
+
+                    <div class="button-group">
+                        <button class="btn-success" id="exportBtn" data-locale="btn_export"></button>
+                        <button class="btn-secondary" id="importBtn" data-locale="btn_import"></button>
+                    </div>
+
+                    <input type="file" id="importFile" style="display: none;" accept=".json,.sql" />
+                </div>
+
+                <div class="card">
+                    <div id="backupLog" class="log-area">
+                    </div>
+                </div>
+            </div>
+
+            <!-- DASHBOARD PAGE (RAW SQL QUERY & MUTATION) -->
+            <div id="dashboard" class="page">
+                <div class="card" id="dashboardQueryCard">
+                    <h2>🔍EXECUTE QUERY</h2>
+                    <div class="editor-container">
+                        <pre
+                            class="editor-highlight"><code id="queryEditor" class="language-sql" style="padding: 0; background: none"></code></pre>
+                        <div contenteditable="plaintext-only" id="queryEditorInput" class="editor-input"
+                            spellcheck="false"></div>
+                    </div>
+                    <div class="dashboard-presets">
+                        <span class="preset-label">Presets:</span>
+                        <button class="preset-chip dashboard-preset-btn" data-target="query"
+                            data-sql="SELECT I.id, C.title, I.box_id, I.expiration_date, I.status, I.add_date, I.remove_date FROM items AS I JOIN categories AS C ON C.id = I.category_id LIMIT 20;">Items</button>
+                        <button class="preset-chip dashboard-preset-btn" data-target="query"
+                            data-sql="SELECT * FROM categories WHERE deleted = 0;">Categories</button>
+                        <button class="preset-chip dashboard-preset-btn" data-target="query"
+                            data-sql="SELECT * FROM boxes ORDER BY id ASC;">Boxes</button>
+                        <button class="preset-chip dashboard-preset-btn" data-target="query"
+                            data-sql="SELECT * FROM box_adjacency;">Adjacency</button>
+                        <button class="preset-chip dashboard-preset-btn" data-target="query"
+                            data-sql="SELECT type, name, sql FROM sqlite_master WHERE type IN ('table', 'trigger');">Schema</button>
+                    </div>
+                    <div class="button-group" id="runQueryBtnGroup" style="margin-top: 15px;">
+                        <button class="btn-primary" id="executeSelectBtn">Execute
+                            Query</button>
+                        <button class="btn-secondary" id="clearSelectBtn">Clear</button>
+                    </div>
+                    <div id="queryResultsContainer" class="query-results-area"></div>
+                </div>
+
+                <div class="card" id="dashboardMutationCard">
+                    <h2>⚡EXECUTE MUTATION QUERY</h2>
+                    <div class="editor-container">
+                        <pre
+                            class="editor-highlight"><code id="mutationEditor" class="language-sql" style="padding: 0; background: none"></code></pre>
+                        <div contenteditable="plaintext-only" id="mutationEditorInput" class="editor-input"
+                            spellcheck="false"></div>
+                    </div>
+                    <div class="dashboard-presets">
+                        <span class="preset-label">Presets:</span>
+                        <button class="preset-chip dashboard-preset-btn" data-target="mutation"
+                            data-sql="UPDATE items SET status = 1 WHERE id = 1;">Update Item</button>
+                        <button class="preset-chip dashboard-preset-btn" data-target="mutation"
+                            data-sql="INSERT OR IGNORE INTO boxes (id) VALUES (99);">Add Box</button>
+                        <button class="preset-chip dashboard-preset-btn" data-target="mutation"
+                            data-sql="UPDATE categories SET weight = 150.0 WHERE title = 'Default';">Update
+                            Category</button>
+                    </div>
+                    <div class="button-group" id="runMutationBtnGroup" style="margin-top: 15px;">
+                        <button class="btn-success" id="executeMutationBtn">Apply
+                            Changes</button>
+                        <button class="btn-secondary" id="clearMutationBtn">Clear</button>
+                    </div>
+                    <div id="mutationStatusContainer" class="mutation-status-area"></div>
+                </div>
+
+                <div class="card">
+                    <div id="dashboardLog" class="log-area">
+                        <div class="log-entry" data-locale="initial_log"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STATISTICS PAGE -->
+            <div id="stats" class="page">
+                <div class="card">
+                    <h2>📊 <span data-locale="page_title_stats"></span></h2>
+
+                    <div style="color: #2c3e50; margin-bottom: 20px;">
+                        The following chart fits the linear regression to the running totals of items added or removed from the inventory over time. The following quantity is computed for each cutoff date:
+                        \[t = \frac{\hat{\beta_1} - 0}{\mathrm{SE}(\beta_1)} \sim t_{n - 2}\]
+                        which is t-distributed under the null hypothesis \(H_0: \beta_1 = 0\) <sup><a style="font-size: 10px;" href="./notes/build/main.pdf#section.2">[1]</a></sup>. <br></br>
+                        However the process exhibits a random walk behavior as \(Y_t = Y_{t-1} + \Delta_t\), where we assume the deltas to be <span style="font-style: italic;">i.i.d.</span> normal with mean \(\mu\) and variance \(\sigma^2\). We test the hypothesis \(H_0: \mu \geq 0\) against \(H_1: \mu < 0\) using the t-statistic. For this we use the decomposition \(\Delta_t = \mu + \varepsilon_t\) and fit 1-d linear regression (degenerate case of linear regression) to determine the parameter \(\mu\). The closed form solution is given by \(\hat{\mu} = \overline{\Delta}\) and the t-statistic in this case has \(n-1\) degrees of freedom
+                        \[t = \frac{\overline{\Delta}}{\sqrt{\frac{1}{n - 1}\sum_{t = 1}^{n} (\Delta_t - \overline{\Delta})} / \sqrt{n}} \sim t_{n - 1}\]
+                        <br></br>
+                        The reasoning above invalidates the <span style="font-style: italic;">i.i.d.</span> assumption for the errors in the linear regression model, since the data points are clearly not indepedent as \(\mathrm{Cov} (Y_{t-1}, Y_{t}) = \mathrm{Var}(Y_{t-1}) + \mathrm{Cov}(Y_{t-1}, \Delta_t) = \mathrm{Var}(Y_{t-1}) > 0\) (by independence of deltas). However we keep both test as the first one appears to be more illustrative and takes into account the time spacing.
+                    </div>
+                    <div id="analyticsCategoryInputContainer" class="form-group"></div>
+                    <div class="form-group">
+                        <label for="analyticsCutoffSlider">cutoff</label>
+                        <input type="range" id="analyticsCutoffSlider" min="0" max="1" value="0" step="0.001">
+                    </div>
+                    <div id="analyticsDriftTrend" style="text-align: center; font-size:20px"></div>
+                    <hr class="section-divider">
+                    <div id="analyticsChartContainer" style="width: 100%; max-height: 400px;"></div>
+                    <hr class="section-divider">
+                    <div id="analyticsResidualsContainer" style="width: 100%; max-height: 400px;"></div>
+                    <hr class="section-divider">
+                    <div id="analyticsQQContainer" style="width: 100%; max-height: 400px;"></div>
+                </div>
+
+                <div class="card">
+                    <h2>🗓️ Activity</h2>
+                    <div id="analyticsHeatmapContainer" style="width: 100%; max-height: 220px;"></div>
+                </div>
+
+                <div class="card">
+                    <div id="statsLog" class="log-area">
+                        <div class="log-entry" data-locale="initial_log">Statistics module ready...</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p data-locale="version"></p>
+        </footer>
+    </div>
+
+    <script type="module">
+        //import { HeapTests, DatabaseTests, debug } from './dist/tests.js';
+        import { renderPattern, localizeDOM } from './dist/vocab.js';
+        import { main, navigate_to, handle_navigation } from './dist/index.js';
+        import * as ModelView from './src/modules/model-viewer.js';
+        import { stat_test } from './dist/linear_regression.js';
+
+        window.addEventListener("pageshow", async (event) => {
+            await main();
+            localizeDOM();
+        });
+
+        window.addEventListener('popstate', async (e) => {
+            await handle_navigation();
+        });
+
+        //if (debug) {
+        //    HeapTests.run();
+        //    DatabaseTests.run();
+        //}
+    </script>
+</body>
+
+</html>

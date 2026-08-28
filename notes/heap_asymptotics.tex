@@ -1,0 +1,56 @@
+\section{Heap asymptotics}
+We heapify the container by levels starting from the bottom one. Let $n$ be the Heap size. Then $(n - 1) / 2$ is the index of the first node having left child. As we assume that all the substrees starting from the level $i + 1$ are valid min heaps, we have that the tree with the root at index $j$ at the level $i$ may only have the root out of order, which is fixed by sinking it down. The number of executions of the sinking down is given by:
+\[\sum_{i=0}^{h-1} (2^i \cdot (h - i))\]
+where $h$ is the height of the heap, $2^i$ is the number of nodes at the level $i$ and $h - i$ is the number of level below the $i$-th one.
+
+\begin{lemma}
+    For any $q \in (-1, 1)$:
+    \[\sum_{k=0}^{\infty} k q^k = \frac{q}{(1 - q)^2}\]
+\end{lemma}
+\begin{proof}
+    Suppose $\sum_{k=1}^{\infty} k {q}^k$ converges for $|q| < 1$. Let $S_n = \sum_{k=1}^{n} k {q}^k$:
+    \begin{align}
+        S_n - qS_n
+        = \sum_{k=1}^{n} k {q}^k - \sum_{k=1}^{n} k q^{k+1}
+         & = \sum_{k=1}^{n} k {q}^k - \sum_{k=2}^{n+1} (k-1) q^k \notag
+        \\ &= q + \sum_{k=2}^{n} k {q}^k - \sum_{k=2}^{n} (k-1) q^k - nq^{n+1} \notag
+        \\ &= q + \sum_{k=2}^{n} (k - k + 1) q^k - nq^{n+1} \notag
+        \\ &= \sum_{k=1}^{n} q^k - nq^{n+1} \notag
+    \end{align}
+
+    Since we assume the sequence $S_n$ to converge, $nq^{n+1} \to 0$ as a sequence must converge to zero to be summable.
+    \begin{align*}
+        (1-q)\lim_{n \to \infty} S_n
+        = \lim_{n \to \infty} (S_n - qS_n)
+         & = \lim_{n \to \infty} \left(\sum_{k=1}^{n} q^k - nq^{n+1} \right)
+        \\ &= \frac{q}{1-q} - \lim_{n \to \infty} nq^{n+1}
+        \\ &= \frac{q}{1-q}
+    \end{align*}
+
+    Therefore:
+    \[\sum_{k=1}^{\infty} k {q}^k = \frac{q}{{(1-q)}^2}\]
+
+    Consequently:
+    \[\sum_{k=0}^{\infty} k q^k
+    = 0 \cdot q^0 + \sum_{k=1}^{\infty} k q^k
+    = \frac{q}{(1 - q)^2}\]
+
+    To prove convergence of $S_n$ we can use the ratio test:
+    \[\left|\frac{(k+1)q^{k+1}}{kq^k} \right|
+        = |q|\frac{k+1}{k}\]
+
+    The sequence $(k+1)/k \to 1$. Since $|q| < 1$ we can pick $\theta$ in such a way that $|q| < \theta < 1$. Hence we have that there exists $n_0 \in \N$, s.t. $|(k+1)/k - 1| = (k+1)/k - 1 < 1 / \theta - 1$ for all $n > n_0$
+    \[|q|\frac{k+1}{k} \leq \frac{|q|}{\theta} < 1 \quad \forall n\geq n_0\]
+\end{proof}
+
+By substituting $k = h - i$ we get that the sum is equal to:
+\begin{align*}
+    \sum_{i=0}^{h-1} (2^i \cdot (h - i))
+    = \sum_{k=1}^{h} (2^{h-k} \cdot k)
+    = 2^h \sum_{k=1}^{h} 2^{-k} \cdot k
+    < 2^h \sum_{k=0}^{\infty} (2^{-k} \cdot k)
+     & = 2^h \cdot \frac{1/2}{(1 - 1/2)^2}
+    \\ &= 2 \cdot 2^h
+    \leq 2 n
+\end{align*}
+where we have used that the number of nodes in a complete binary heap is $2^{h + 1} - 1$ hence $n \geq 2^{h}$ as the levels $1, \dots, h - 1$ are full and there is at least one node at the level $h$.

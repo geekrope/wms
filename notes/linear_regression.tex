@@ -1,0 +1,264 @@
+\section{Linear regression} \label{sec:linear_regression}
+Assume the following construction:
+\[y_i = \beta^T x_i + \varepsilon_i, \quad \varepsilon_1, ..., \varepsilon_n \overset{iid.}{\sim} \mathcal{N}(0, \sigma^2)\]
+where $x_i \in \R^d$ and $\beta \in \R^d$ are fixed
+
+\subsection{Preliminaries}
+\begin{lemma}                                                                      
+    Let $X: \Omega \to \R^d$ be a random variable and $A \in \R^{d \times d}, b \in \R^d$. Assume that the second moments exist, i.e. $\E [X_i^2] < \infty$ and the covariance matrix is given by $\Sigma$. Then the following properties hold:
+    \begin{enumerate}[label=Property \thelemma.\arabic*, align=left]
+        \item \label{prop:expectation linearity} $\mathbb{E}[AX + b] = A \cdot \mathbb{E}[X] + b$
+        \item \label{prop:covariance linearity} $\cov (AX) = A \cdot \Sigma \cdot A^T$
+    \end{enumerate}
+\end{lemma}
+\begin{remark}                                                    
+    Using the fact that the second moment exists and by Jensen's inequality, we have that $\E[X_i] < \infty$ and $\E[X_i^2] < \infty$ for all $i = 1, ..., d$. Therefore the covariance matrix is well-defined, since $\left(\E [|X_i X_j|]\right)^2 = (\E [|X_i| |X_j|])^2 \leq \E [|X_i|^2] \E [|X_j|^2] < \infty$ by Cauchy-Schwarz inequality.
+\end{remark}
+\begin{proof} \hfill  
+    \begin{enumerate}                                                                                                                                        
+        \item Trivial
+        \item Suppose that the expected value of $X$ is the zero vector. By \ref{prop:expectation linearity} we also have that $\E[AX] = A \E[X] = 0$. Then we have that:
+              \begin{align*}                                                                                                                                            
+                  \cov((AX)_i, (AX)_j)
+                   & = \cov \left(\sum_{k=1}^{d} A_{ik} X_k, \sum_{l=1}^{d} A_{jl} X_l\right)
+                  = \E \left(\left(\sum_{k=1}^{d} A_{ik} X_k\right)\left(\sum_{l=1}^{d} A_{jl} X_l\right) \right)
+                  \\ & = \E \left[\sum_{k=1}^{d} \sum_{l=1}^{d} A_{ik} X_k X_l A^T_{lj} \right]
+                  = \sum_{k=1}^{d} \sum_{l=1}^{d} A_{ik} \E [X_k X_l] A^T_{lj}
+                  \\ & = \sum_{k=1}^{d} A_{ik} \left(\sum_{l=1}^{d} \Sigma_{kl} A^T_{lj} \right)
+                  = \sum_{k=1}^{d} A_{ik} (\Sigma A^T)_{kj}
+                  = (A \Sigma A^T)_{ij}
+              \end{align*}
+              
+              If the expected value of $X$ is not the zero vector, we can define a new random variable $Y = X - \E[X]$, which has the expected value of zero. Then we have that:
+              \[\cov (Y_i, Y_j)
+                  = \E [Y_i Y_j]
+                  = \E[(X_i - \E[X]_i)(X_j - \E[X]_j)]
+                  = \cov (X_i, X_j)\]
+              Therefore we have that:
+              \begin{align*}                                                                                                                                    
+                  \cov((AX)_i, (AX)_j)
+                   & = \E[(AX - \E[AX])_i \cdot (AX - \E[AX])_j]
+                  \\ &\overset{*}{=} \E[(A(X - \E[X]))_i \cdot (A(X - \E[X]))_j]
+                  \\ &= \E[(AY)_i \cdot (AY)_j]
+                  = \cov((AY)_i, (AY)_j) 
+                  \\ &= (A \cov(Y) A^T)_{ij} 
+                  = (A \cov(X) A^T)_{ij}
+              \end{align*}
+              where $*$ follows from \ref{prop:expectation linearity}.
+    \end{enumerate}
+\end{proof} 
+
+\begin{lemma}[Multivariate normal distribution] \label{lem:multinormal}
+    We say that $X: \Omega \to \R^d$ is multivariately normally distributed if and only if there exists a matrix $A \in \R^{d \times d}$ and a vector $b \in \R^d$ such that $X = A Z + b$, where $Z_1, ..., Z_d \overset{iid.}{\sim} \mathcal{N}(0, 1)$.
+    
+    We have that multivariate normal distribution is closed under linear transformations, i.e. if $X \sim \mathcal{N}(\mu, \Sigma)$ and $Y = AX + b$, then $Y \sim \mathcal{N}(A\mu + b, A \Sigma A^T)$. (For the expectation and covariance refer to \ref{prop:expectation linearity} and \ref{prop:covariance linearity}).
+\end{lemma}
+\begin{lemma} \label{lem:multivariate independence}
+    For the multivariate normal distribution, we have that the components are independent if and only if they are uncorrelated, i.e. $\cov(X_i, X_j) = 0$ for all $i \neq j$.
+\end{lemma}
+
+\begin{lemma} \label{lem:projection properties}
+    Let $X \in \R^{n \times d}$ be a matrix of full rank, where $n > d$. Define $H = X (X^TX)^{-1}X^T \in \R^{n \times n}$ and $E = \diag \{\underbrace{1, ..., 1}_{n - d}, \underbrace{0, ..., 0}_{d}\}$, then:
+    \begin{enumerate}[label=Property \thelemma.\arabic*, align=left]
+        \item \label{prop:idempotent symmetric} $I - H$ is symmetric and idempotent.
+        \item \label{prop:rank} $\rank(I - H) = n - d$
+        \item \label{prop:identity} There exists a matrix $Q$ such that $I - H = Q^T E Q$
+        \item \label{prop:kernel image} $\ker (I - H) = \im (X)$
+    \end{enumerate}
+\end{lemma}
+\begin{proof} \hfill 
+    \begin{enumerate}                                                                                                                    
+        \item This follows by the direct computation:
+              \[(I - H)^T 
+                  = I - H^T 
+                  = I - (X (X^TX)^{-1}X^T)^T
+                  = I - (X^T)^T \left((X^TX)^T\right)^{-1} X^T
+                  = I - H\]
+              \begin{align*}                                                     
+                  (I - H)(I - H)
+                   & = (I - X (X^TX)^{-1}X^T)(I - X (X^TX)^{-1}X^T)
+                  \\ & = I - 2 X (X^TX)^{-1}X^T + X (X^TX)^{-1}X^T X (X^TX)^{-1}X^T
+                  \\ & = I - 2 X (X^TX)^{-1}X^T + X (X^TX)^{-1} X^T                 
+                  \\ & = I - X (X^TX)^{-1}X^T
+                  = I - H
+              \end{align*}
+        \item Since $I - H$ is idempotent we have that its trace is equal to its rank. Therefore we have that:
+              \[\tr(H) 
+                  = \tr(X (X^TX)^{-1}X^T)
+                  \overset{*}{=} \tr((X^TX)^{-1} X^T X)
+                  = \tr(I_d)
+                  = d\]
+              where $*$ follows from the cyclic property of the trace. Therefore we have that:
+              \[\rank(I - H) = \tr(I - H) = \tr(I) - \tr(H) = n - d\]
+        \item Since the matrix $I - H$ is idempotent we have that it has an eigenvalue $1$ with multiplicity equal to $\rank(I - H) = n - d$ and eigenvalue $0$ with multiplicity $d$. Its minimal polynomial is contained in $\{x, x-1, x(x-1)\}$ implying that $I - H$ is diagonalizable since in all the cases it does not have repeated factors. Therefore there exists a matrix $Q \in O(\R^n)$, s.t. 
+              \[Q^T (I - H) Q = E\]
+        \item By the rank-nullity theorem we have $\dim \ker(I - H) = n - \rank(I - H) = n - (n - d) = d$. Using the assumption we have that $\dim \im(X) = d$. Therefore it suffices to show that $\im X \subset \ker(I - H)$:
+              \begin{align*}                                
+                  (I - H)Xy 
+                   & = (I - X(X^TX)^{-1}X^T)Xy 
+                  \\ &= Xy - X(X^TX)^{-1}X^TXy
+                  = Xy - Xy = 0 \quad \forall y \in \R^d
+              \end{align*}
+              This shows that $\im X \subset \ker(I - H)$, and since they have the same dimension we have that $\im X = \ker(I - H)$.
+    \end{enumerate}
+\end{proof}
+
+\subsection{t-statitistic}
+In this section we assume that $\hat{\beta}$ is the ordinary least squares estimator of $\beta$. We establish two facts:
+\begin{itemize}                                        
+    \item $\varepsilon \sim \mathcal{N}(0, \sigma^2 I)$ since the components of $\varepsilon$ are independent and identically distributed as $\mathcal{N}(0, \sigma^2)$, thus we can obtain $\varepsilon = \sigma I \cdot (\varepsilon / \sigma)$, where $\varepsilon_1 / \sigma, ..., \varepsilon_n / \sigma \overset{iid.}{\sim} \mathcal{N}(0, 1)$.
+    \item $y = X\beta + \varepsilon \sim \mathcal{N}(X\beta, \sigma^2 I)$ as a consequence of Lemma~\ref{lem:multinormal} and the fact that $y$ is a linear transformation of $\varepsilon$.
+\end{itemize}
+\begin{enumerate}[label=Step \arabic*., align=left]
+    \item Compute the distribution of the residual sum of squares: 
+          \[\hat{\varepsilon}
+              = y - X \hat{\beta}
+              = y - X (X^TX)^{-1}X^T y
+              = (I - H) y\]
+          
+          By \ref{prop:kernel image} we have that $\im(X) = \ker(I - H)$, and since $X\beta \in \im(X)$ we have that:
+          \[(I - H) X\beta = 0\]
+          thus:
+          \[(I - H) y 
+              = (I - H) (X\beta + \varepsilon) 
+              = (I - H)\varepsilon\]
+          with the notation from Lemma~\ref{lem:projection properties}. Using the result from \ref{prop:identity} we have that:
+          \[I - H = Q^T E Q\]
+          for some orthogonal matrix $Q$.
+          
+          Writing out the expression for the residual sum of squares, we have that:
+          \[\text{RSS} 
+              = \hat{\varepsilon}^T \hat{\varepsilon}
+              = \varepsilon^T (I - H)^T (I - H) \varepsilon
+              = \varepsilon^T (I - H) \varepsilon\]
+          
+          Define $U = Q \varepsilon$. Then $U \sim \mathcal{N}(0, \sigma^2 I)$ by Lemma~\ref{lem:multinormal}. Then we have that:
+          \begin{itemize}                                                                                    
+              \item $\E[Q \varepsilon] = Q \E[\varepsilon] = 0$ by \ref{prop:expectation linearity}
+              \item $\cov(Q \varepsilon) = Q \cov(\varepsilon) Q^T = Q \sigma^2 I Q^T = \sigma^2 Q Q^T = \sigma^2 I$ by \ref{prop:covariance linearity}
+          \end{itemize}
+          
+          Then by Lemma~\ref{lem:multivariate independence} we have that the components of $U$ are independent, since they are uncorrelated.
+          
+          Thus we have that $U/\sigma$ follows a joint standard normal distribution. Then we have that:
+          \begin{equation} \label{eq:rss expansion}
+              \text{RSS} = U^T E U
+          \end{equation}
+          \[\frac{\text{RSS}}{\sigma^2}
+              = U^T / \sigma \cdot E \cdot U / \sigma
+              = \sum_{i=1}^{n - d} (U_i / \sigma)^2
+              \sim \chi^2_{n - d}\]
+    \item Compute the distribution of $\hat{\beta}_i - \beta_i$:
+          
+          Observe that the $\hat{\beta}$ follows multivariate normal distribution since $\hat{\beta} = Ay$ where $A = (X^TX)^{-1}X^T$, and $y \sim \mathcal{N}(X\beta, \sigma^2 I)$ (see Lemma~\ref{lem:multinormal}). 
+          Therefore $\hat{\beta} \sim \mathcal{N} (\beta, \sigma^2 AA^T)$, where we have used that $\hat{\beta}$ is an unbiased estimator of $\beta$ and that
+          \[\cov(\hat{\beta}) 
+              = \cov(Ay)
+              = A\cov(y)A^T
+              = \sigma^2 AA^T\]
+          by \ref{prop:covariance linearity}.
+          \[AA^T 
+                  = (X^TX)^{-1} X^T X \left((X^TX)^{-1}\right)^T
+              = \left((X^TX)^{-1}\right)^T
+              = \left((X^TX)^T\right)^{-1}
+              = (X^TX)^{-1}\]
+          
+          As was derived above, we have that $\hat{\beta} \sim \mathcal{N} (\beta, \sigma^2 (X^TX)^{-1})$. Therefore we have that:
+          \[\hat{\beta}_i - \beta_i \sim \mathcal{N}(0, \sigma^2 (X^TX)^{-1}_{ii})\]
+          
+          Thus:
+          \[\frac{\hat{\beta}_i - \beta_i}{\sigma \sqrt{(X^TX)^{-1}_{ii}}} \sim \mathcal{N}(0, 1)\]
+    \item $\hat{\varepsilon}$ and $\hat{\beta} - \beta$ are independent:
+          
+          We write $\hat{\varepsilon} = (I - H) \varepsilon$ and $\hat{\beta} - \beta = (X^TX)^{-1} X^T (X\beta + \varepsilon) - \beta = (X^TX)^{-1} X^T \varepsilon$. Then we have that:
+          
+          \[\begin{pmatrix}                    
+                  \hat{\varepsilon} \\ 
+                  \hat{\beta} - \beta
+              \end{pmatrix} =
+              \begin{pmatrix}                    
+                  I - H \\
+                  (X^TX)^{-1} X^T
+              \end{pmatrix} \varepsilon\]
+          
+          Thus by Lemma~\ref{lem:multinormal} we have that the joint distribution of $\hat{\varepsilon}$ and $\hat{\beta} - \beta$ is multivariate normal. Therefore by Lemma~\ref{lem:multivariate independence} it suffices to show that they are uncorrelated, i.e. $\cov(\hat{\varepsilon}, \hat{\beta} - \beta) = 0$. We have that:          
+          \begin{align*}                
+              \cov (\hat{\varepsilon}, \hat{\beta} - \beta)
+              \overset{*}{=} \E [\hat{\varepsilon} (\hat{\beta} - \beta)^T]
+               & = \E [(I - H) \varepsilon \varepsilon^T X (X^TX)^{-1}]
+              \\ &\overset{**}{=} (I - H) \E [\varepsilon \varepsilon^T] X (X^TX)^{-1}
+              \\ &= \sigma^2 (I - H) X (X^TX)^{-1}
+          \end{align*}
+          where $*$ follows from the fact that both $\hat{\varepsilon}$ and $\hat{\beta} - \beta$ have expected value of zero as the linear transformation of $\varepsilon$ which has expected value of zero. $**$ follows from \ref{prop:expectation linearity}.
+          
+          By Lemma~\ref{prop:kernel image} we have that $\im(X) = \ker(I - H)$, thus $(I - H) X = 0$, hence:
+          \[\cov (\hat{\varepsilon}, \hat{\beta} - \beta)
+              = \sigma^2 (I - H) X (X^TX)^{-1}
+              = 0\]
+    \item Conclude that the t-statistic follows a t-distribution with $n - d$ degrees of freedom:
+          \[\frac{\hat{\beta}_i - \beta_i}{\sqrt{\frac{\text{RSS}}{n - d} (X^TX)^{-1}_{ii}}}
+              = \frac{\frac{\hat{\beta}_i - \beta_i}{\sigma \sqrt{(X^TX)^{-1}_{ii}}}}{\frac{1}{\sigma} \sqrt{\frac{\text{RSS}}{n - d}}}
+              = \frac{\frac{\hat{\beta}_i - \beta_i}{\sigma \sqrt{(X^TX)^{-1}_{ii}}}}{\sqrt{\frac{\text{RSS}}{\sigma^2 (n - d)}}}
+              = \frac{Z}{\sqrt{\frac{T}{n - d}}}\]
+          where by the previous steps we have that $Z = \frac{\hat{\beta}_i - \beta_i}{\sigma \sqrt{(X^TX)^{-1}_{ii}}} \sim \mathcal{N}(0, 1)$ and $T = \frac{\text{RSS}}{\sigma^2} \sim \chi^2_{n - d}$. $T$ depends only on the residuals and $Z$ depends only on $\hat{\beta}_i$, which are independent by the previous step. Therefore we have that the t-statistic follows a t-distribution with $n - d$ degrees of freedom.
+\end{enumerate}
+
+\begin{theorem} \label{thm:variance estimator}
+    The unbiased estimator of the variance of the error term is given by:
+    \[\hat{\sigma}^2 = \frac{1}{n - d} \sum_{i=1}^{n} \hat{\varepsilon}_i^2\]
+    where $d$ is the number of features and $n$ is the number of samples.    
+\end{theorem}
+\begin{proof}                                                             
+    \[\text{RSS} 
+        = \hat{\varepsilon}^T\hat{\varepsilon}
+        \overset{\eqref{eq:rss expansion}}{=} \sum_{i=1}^{n - d} U_i^2\]
+    
+    Each $U_i$ is distributed as $\mathcal{N}(0, \sigma^2)$, therefore we have that:
+    \[\E[U_i^2] = \var(U_i) = \sigma^2\]
+    
+    Thus we have that:
+    \[\E[\text{RSS}] = \E\left[\sum_{i=1}^{n - d} U_i^2\right] = \sum_{i=1}^{n - d} \E[U_i^2] = (n - d) \sigma^2\]
+    
+    Dividing both sides by $n - d$ yields:
+    \[\E\left[\frac{\text{RSS}}{n - d}\right] = \sigma^2\]
+\end{proof}
+\begin{remark}                                                
+    This provides an intuition why we use this estimator for the variance of the error term.
+\end{remark}
+
+\begin{theorem}[Gauss-Markov theorem] \label{thm:gauss-markov}
+    The ordinary least squares estimator $\hat{\beta}$ is the best linear unbiased estimator (BLUE) of $\beta$, i.e. for each $C \in \R^{d \times n}$ such that $\E[C y] = \beta$, we have that:
+    \[\cov(\hat{\beta}) \preceq \cov(Cy)\]    
+\end{theorem}
+\begin{proof}            
+    We need to show that the matrix:
+    \[\cov(Cy) - \cov(\hat{\beta})\]
+    is positive semidefinite.
+    
+    Define $D = C - (X^TX)^{-1}X^T$. Then we have that:
+    \[\E [Cy] 
+        = \E [((X^TX)^{-1}X^T + D)y]
+        = \E [(X^TX)^{-1}X^Ty] + \E[Dy]
+        = \beta\]
+    
+    Thus we have that $\E[Dy] = 0$. Therefore we have that:
+    \[\E[Dy] 
+        = \E[DX\beta + D\varepsilon]
+        = DX\beta = 0\]
+    
+    Since $\beta$ is unknown we must have that $DX\beta = 0$ for all $\beta$, which implies that $DX = 0$. This also implies $(DX)^T = X^TD^T = 0$. Then we have that:
+    \begin{align*}    
+        \cov(Cy)
+        &= \sigma^2 CC^T
+        \\ &= \sigma^2 ((X^TX)^{-1}X^T + D)((X^TX)^{-1}X^T + D)^T
+        \\ &= \sigma^2 ((X^TX)^{-1}X^TX(X^TX)^{-1} + DX(X^TX)^{-1} + (X^TX)^{-1}X^TD^T + DD^T)
+        \\ &= \sigma^2 ((X^TX)^{-1} + DD^T)
+    \end{align*}
+
+    We know that $DD^T$ is positive semidefinite, so for any $v \in \R^d$ we have that:
+    \[v^T CC^T v = v^T (X^TX)^{-1} v + v^T DD^T v \geq v^T (X^TX)^{-1} v\]
+    thus:
+    \[v^T (CC^T - (X^TX)^{-1}) v \geq 0\]
+    implying that $CC^T - (X^TX)^{-1}$ is positive semidefinite. Therefore we have that:
+    \[\cov(Cy) - \cov(\hat{\beta}) = \sigma^2 (CC^T - (X^TX)^{-1}) \succeq 0\]
+\end{proof}

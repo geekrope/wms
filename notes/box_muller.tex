@@ -1,0 +1,138 @@
+\section{Box-Muller transformation}
+\newcommand{\J}{\operatorname{J}}
+\newcommand{\atantwo}{\operatorname{atan2}}
+Consider a random variable $Z \sim \mathcal{N}(0, I_2)$, meaning $f_Z = \frac{1}{2\pi}e^{-(x^2 + y^2)/2}$. Let $z, t \in \R$ be arbitrary. Then we have
+\begin{align}
+    \P(Z \in (-\infty,z] \times (-\infty,t])
+     & = \int_{(-\infty,z] \times (-\infty,t]} f_Z(x,y) \, d(x, y) \notag
+    \\ &= \int_{\R^2} \frac{1}{2\pi} e^{-(x^2 + y^2)/2} \cdot \I_{(-\infty,z] \times (-\infty,t]}(x, y) \, d(x, y) \label{eq:cdf box muller}
+\end{align}
+
+We do the change of variables:
+\[\Phi:(0, 1)^2 \to \R^2 \setminus \{(u, 0): u \geq 0\}, \quad (x, y) \mapsto
+    \begin{pmatrix}
+        \sqrt{-2 \ln x} \cos (2\pi y) \\
+        \sqrt{-2 \ln x} \sin (2\pi y)
+    \end{pmatrix}
+    = \begin{pmatrix}
+        \phi_1(x, y) \\
+        \phi_2(x, y)
+    \end{pmatrix}\]
+
+\begin{claim} \label{cl:phi bijective}
+    The map $\Phi$ is a bijection.
+\end{claim}
+\begin{proof}[Proof of claim \ref{cl:phi bijective}] \hfill
+    \begin{enumerate}[align=left]
+        \item[Surjectivity:] Let $(z, t) \in \R^2 \setminus \{(u, 0): u \geq 0\}$.By definition of $\atantwo$ we have that:
+              \[\begin{pmatrix}
+                      z \\
+                      t
+                  \end{pmatrix}
+                  = \sqrt{z^2 + t^2}
+                  \begin{pmatrix}
+                      \cos(\atantwo(t,z)) \\
+                      \sin(\atantwo(t,z))
+                  \end{pmatrix}\]
+              for all $(z, t) \in \R^2$. $\atantwo \in (-\pi, \pi]$, so we define $\theta = \atantwo(-t, -z) + \pi \in (0, 2\pi]$. By the previous equation we have that:
+              \begin{equation} \label{eq:atan theta}
+                  \begin{pmatrix}
+                      \cos(\atantwo(-t, -z) + \pi) \\
+                      \sin(\atantwo(-t, -z) + \pi)
+                  \end{pmatrix}
+                  = \begin{pmatrix}
+                      -\cos(\atantwo(-t, -z)) \\
+                      -\sin(\atantwo(-t, -z))
+                  \end{pmatrix}
+                  = \frac{1}{\sqrt{z^2 + t^2}}
+                  \begin{pmatrix}
+                      z \\
+                      t
+                  \end{pmatrix}
+              \end{equation}
+
+              Since the ray $\{(u, 0): u \geq 0\}$ is excluded from the codomain of $\Phi$, we have that $\theta \in (0, 2\pi)$, so we can define $y = \theta / (2\pi) \in (0, 1)$. We also define $x = e^{-(z^2 + t^2)/2} \in (0, 1)$ (either $z$ or $t$ is non-zero) to obtain that:
+              \begin{align*}
+                  \Phi(x, y) =
+                  \begin{pmatrix}
+                      \sqrt{-2 \ln x} \cos (2\pi y) \\
+                      \sqrt{-2 \ln x} \sin (2\pi y)
+                  \end{pmatrix}
+                   & =
+                  \begin{pmatrix}
+                      \sqrt{-2 (-(z^2 + t^2)/2)} \cos (2\pi \cdot \theta / (2\pi)) \\
+                      \sqrt{-2 (-(z^2 + t^2)/2)} \sin (2\pi \cdot \theta / (2\pi))
+                  \end{pmatrix}
+                  \\ &= \sqrt{z^2 + t^2}
+                  \begin{pmatrix}
+                      \cos (\theta) \\
+                      \sin (\theta)
+                  \end{pmatrix}
+                  \overset{\eqref{eq:atan theta}}{=}
+                  \begin{pmatrix}
+                      z \\
+                      t
+                  \end{pmatrix}
+              \end{align*}
+        \item[Injectivity:] Let $(x_1, y_1), (x_2, y_2) \in (0, 1)^2$ such that $\Phi(x_1, y_1) = \Phi(x_2, y_2)$. Then we have that:
+              \[\sqrt{-2 \ln x_1} \cos(2\pi y_1) = \sqrt{-2 \ln x_2} \cos(2\pi y_2)\]
+              \[\sqrt{-2 \ln x_1} \sin(2\pi y_1) = \sqrt{-2 \ln x_2} \sin(2\pi y_2)\]
+
+              Squaring and adding the two equations gives us that $-2\ln x_1 = -2\ln x_2$, so $x_1 = x_2$. Dividing both sides by $\sqrt{-2 \ln x_1}$ (which is non-zero since $x_1 \neq 1$) gives us that $\cos(2\pi y_1) = \cos(2\pi y_2)$ and $\sin(2\pi y_1) = \sin(2\pi y_2)$, which implies that $y_1 = y_2$ as $y_i \in (0, 1)$.
+    \end{enumerate}
+\end{proof}
+
+Now we compute the Jacobian of $\Phi$:
+\[\sqrt{-2 \ln x}'
+    = -\frac{2 \ln'(x)}{2\sqrt{-2 \ln x}}
+    = -\frac{1}{x\sqrt{-2 \ln x}}\]
+
+Thus:
+\[\J \Phi(x, y) =
+    \begin{pmatrix}
+        -\frac{1}{x\sqrt{-2 \ln x}} \cos(2\pi y) & -2\pi \sqrt{-2 \ln x} \sin(2\pi y) \\
+        -\frac{1}{x\sqrt{-2 \ln x}} \sin(2\pi y) & 2\pi \sqrt{-2 \ln x} \cos(2\pi y)
+    \end{pmatrix}\]
+
+The determinant of the Jacobian is:
+\[\det \J \Phi(x, y)
+    = -\frac{1}{x\sqrt{-2 \ln x}} \cdot  2\pi \sqrt{-2 \ln x}
+    = -\frac{2\pi}{x}\]
+where we used the trigonometric identity $\cos^2(2\pi y) + \sin^2(2\pi y) = 1$. Each component of the Jacobian is continuous on $(0, 1)^2$, so $\Phi$ is continuously differentiable on $(0, 1)^2$. The determinant of the Jacobian is non-zero on $(0, 1)^2$, so $\Phi$ is a diffeomorphism.
+
+We start plugging in the change of variables into \eqref{eq:cdf box muller}:
+\[x^2 + y^2 \xrightarrow{\Phi} -2 \ln x\]
+\[\frac{1}{2\pi} e^{-(x^2 + y^2) / 2}
+    \xrightarrow{\Phi} \frac{1}{2\pi} e^{\ln(x)}
+    = \frac{x}{2\pi}\]
+\[\frac{1}{2\pi} e^{-(x^2 + y^2) / 2} \cdot |\det \J \Phi(x, y)|
+    \xrightarrow{\Phi} \frac{x}{2\pi} \cdot \left|-\frac{2\pi}{x} \right|
+    = \frac{x}{2\pi} \frac{2\pi}{x}
+    = 1\]
+as $x \in (0, 1)$ if we restrict to the domain of $\Phi$. Thus the integral in \eqref{eq:cdf box muller} becomes:
+\begin{align}
+    \int_{(-\infty,z] \times (-\infty,t]} f_Z(x,y) \, d(x, y)
+     & = \int_{(0, 1)^2} \I_{(-\infty,z] \times (-\infty,t]}(\Phi(x, y)) \, d(x, y) \notag
+    \\ &= \int_{\R^2 \setminus \{(u, 0): u \geq 0\}} \I_{(-\infty,z] \times (-\infty,t]}(\Phi(x, y)) \cdot \I_{(0, 1)^2} \, d(x, y) \notag
+    \\ &\overset{*}{=} \int_{\R^2} \I_{(-\infty,z] \times (-\infty,t]}(\Phi(x, y)) \cdot \I_{[0, 1]^2} \, d(x, y) \label{eq:int result}
+\end{align}
+where in $*$ we used that $\lambda^2 \left(\{(u, 0): u \geq 0\} \right) = 0$ as:
+\begin{align*}
+    \{(u, 0): u \geq 0\}
+    = \bigcup_{n \in \N} [0, n] \times \{0\}
+     & \Rightarrow \lambda^2 \left(\{(u, 0): u \geq 0\} \right)
+    \\ &\leq \sum_{n=1}^{\infty} \lambda^2 \left([0, n] \times \{0\}\right)
+    = \sum_{n=1}^{\infty} n \cdot 0
+    = 0
+\end{align*}
+and that $\I_{(0, 1)^2} = \I_{[0, 1]^2}$ almost everywhere. Observe that $\I_{[0, 1]^2}$ is the density of the uniform distribution on $[0, 1]^2$, say $U = (U_1, U_2)$. Thus by the change of variables formula \eqref{eq:exp var change} and the fact that $\P(A) = \E[\I_A]$ we have that:
+\begin{equation} \label{eq:exp var change}
+    \E[f(X)] = \int_{\R^m} f(x) f_X(x) \, d(x), \quad X:\Omega \to \R^m, f:\R^m \to \R
+\end{equation}
+\[\P(\Phi(U_1, U_2) \in (-\infty,z] \times (-\infty, t])
+    = \E [\I_{(-\infty,z] \times (-\infty, t]}(\Phi(U_1, U_2))]
+    = \eqref{eq:int result}\]
+
+Thus we have shown that:
+\[\P(Z \in (-\infty,z] \times (-\infty,t]) = \P(\Phi(U_1, U_2) \in (-\infty,z] \times (-\infty, t])\]
+so we can conclude that $\P_Z = \P_{\Phi(U)}$ by the uniqueness of measure as the intervals $(-\infty,z] \times (-\infty,t]$ generate the Borel $\sigma$-algebra on $\R^2$ and form a $\pi$-system.

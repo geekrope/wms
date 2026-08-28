@@ -1,0 +1,57 @@
+{
+  // Visit https://aka.ms/tsconfig to read more about this file
+  "compilerOptions": {
+    // File Layout
+    // "rootDir": "./src",
+    // "outDir": "./dist",
+
+    // Environment Settings
+    // See also https://aka.ms/tsconfig/module
+    "target": "ES2022",
+    "module": "esnext",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "esModuleInterop": true,
+    "types": [],
+    "allowJs": true,
+    // For nodejs:
+    // "lib": ["esnext"],
+    // "types": ["node"],
+    // and npm install -D @types/node
+
+    // Other Outputs
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+
+    // Stricter Typechecking Options
+    "exactOptionalPropertyTypes": true,
+
+    // Recommended Options
+    /* --- MAXIMUM STRICTNESS --- */
+    "strict": true,                       // Enable all strict type-checking options
+    "noImplicitAny": true,                // Raise error on expressions and declarations with an implied 'any' type
+    "strictNullChecks": true,             // Ensure 'null' and 'undefined' are handled explicitly
+    "strictFunctionTypes": true,          // Enable strict checking of function types
+    "strictBindCallApply": true,          // Check types of 'bind', 'call', and 'apply' methods
+    "strictPropertyInitialization": true, // Ensure class properties are initialized in the constructor
+    "noImplicitThis": true,               // Raise error when 'this' has an implied 'any' type
+    "useUnknownInCatchVariables": true,   // Default type for catch block variables to 'unknown'
+
+    /* --- LINTING & CODE QUALITY --- */
+    "noUnusedLocals": true,               // Report errors on unused local variables
+    "noUnusedParameters": true,           // Report errors on unused parameters in functions
+    "noImplicitReturns": true,            // Ensure all code paths in a function return a value
+    "noFallthroughCasesInSwitch": true,   // Prevent accidental fallthrough in switch statements
+    //"noUncheckedIndexedAccess": true,     // Add 'undefined' to types accessed by index (e.g., arrays[i])
+    "noImplicitOverride": true,           // Ensure 'override' keyword is used in subclasses
+    "noPropertyAccessFromIndexSignature": true, // Prevent using dot notation for dynamic keys
+
+    "jsx": "react-jsx",
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "noUncheckedSideEffectImports": true,
+    "moduleDetection": "force",
+    "skipLibCheck": true
+  }
+}
