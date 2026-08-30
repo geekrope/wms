@@ -32,10 +32,7 @@ export class Analytics {
             { ":category_id": category_id });
     }
 
-    public async get_activity(year: number): Promise<ActivityCount[]> {
-        const begin = Date.UTC(year, 0, 1);
-        const end = Date.UTC(year + 1, 0, 1);
-
+    public async get_activity(begin: number, end: number): Promise<ActivityCount[]> {
         return await this.db_driver.query<ActivityCount>(`
             WITH RECURSIVE timeline AS (
                 SELECT date(:begin / 1000, 'unixepoch') AS date

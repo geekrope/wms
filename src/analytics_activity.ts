@@ -34,13 +34,20 @@ function make_heatmap_cell(x: number, y: number, count: number, date: Date): SVG
     return rect;
 }
 
-function build_heatmap_svg(activity: ActivityCount[], year: number): { width: number, height: number, elements: SVGElement[] } {
+function get_first_day(year: number, month: number) {
+    return new Date(year, month, 1).getDay();
+}
+//TODO: fix
+function build_heatmap_svg(activity: ActivityCount[], start_day: number, start_month: number, start_year: number): { width: number, height: number, elements: SVGElement[] } {
     const elements: SVGElement[] = [];
     const full_size = HEATMAP_CELL_SIZE + HEATMAP_CELL_GAP;
+    const compensation = div(start_day + get_first_day(start_year, start_month), 7); // think if this is a workaround
     const height = 7 * full_size;
-
     let ptr = 0;
-    let x_offset = HEATMAP_DAY_LABEL_WIDTH;
+
+    let x_offset = HEATMAP_DAY_LABEL_WIDTH - compensation * full_size;
+    let day = start_day;
+    let year = start_year;
 
     for (let row = 0; row < 7; row++) {
         const label = make_svg_element("text", { x: HEATMAP_DAY_LABEL_WIDTH - 2 * HEATMAP_CELL_GAP, y: row * full_size + HEATMAP_CELL_SIZE / 2, "text-anchor": "end", "dominant-baseline": "middle", "font-size": 9, fill: "#000" });
@@ -49,12 +56,13 @@ function build_heatmap_svg(activity: ActivityCount[], year: number): { width: nu
         elements.push(label);
     }
 
-    for (let month = 0; month < 12; month++) {
+    for (let month_off = 0; month_off < 12;) {
+        const month = (start_month + month_off) % 12;
         const days_in_month = new Date(year, month + 1, 0).getDate();
-        const first_day_of_month = new Date(year, month, 1).getDay();
+        const first_day_of_month = get_first_day(year, month);
         const width = div(days_in_month + first_day_of_month + 6, 7) * full_size;
 
-        for (let day = 0; day < days_in_month; day++) {
+        for (; day < days_in_month; day++) {
             const date = new Date(Date.UTC(year, month, day + 1));
             let count = 0;
 
@@ -68,6 +76,13 @@ function build_heatmap_svg(activity: ActivityCount[], year: number): { width: nu
 
             const element = make_heatmap_cell(x, y, count, date);
             elements.push(element);
+        }
+
+        day = 0;
+        month_off++;
+
+        if ((start_month + month_off) % 12 == 0) {
+            year++;
         }
 
         const text_x = x_offset + width / 2;
@@ -85,11 +100,13 @@ function build_heatmap_svg(activity: ActivityCount[], year: number): { width: nu
     return { width: x_offset + full_size, height: height + HEATMAP_TEXT_HEIGHT, elements };
 }
 
-export async function refresh_activity_plot(container: HTMLElement, year: number): Promise<void> {
+export async function refresh_activity_plot(container: HTMLElement): Promise<void> {
     const analytics = get_analytics_object();
-    const activity: ActivityCount[] = await analytics.get_activity(year);
+    const end_date = new Date();
+    const begin_date = new Date(Date.UTC(end_date.getUTCFullYear() - 1, end_date.getUTCMonth(), end_date.getUTCDate()));
+    const activity: ActivityCount[] = await analytics.get_activity(begin_date.getTime(), end_date.getTime());
 
-    const { width, height, elements } = build_heatmap_svg(activity, year);
+    const { width, height, elements } = build_heatmap_svg(activity, begin_date.getUTCDate() - 1, begin_date.getUTCMonth(), begin_date.getUTCFullYear());
     const svg = make_svg_element("svg", {
         viewBox: `0 0 ${width} ${height}`,
         preserveAspectRatio: "xMidYMid meet",

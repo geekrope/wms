@@ -22,7 +22,7 @@ export async function refresh_analytics(): Promise<void> {
     await refresh_regression_plot();
 
     const heatmap_container = get_element("analyticsHeatmapContainer");
-    await refresh_activity_plot(heatmap_container, new Date().getFullYear());
+    await refresh_activity_plot(heatmap_container);
 }
 
 export async function init_analytics(db_driver: IDatabaseDriver, manager: DatabaseManager): Promise<void> {

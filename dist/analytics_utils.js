@@ -24,9 +24,7 @@ export class Analytics {
             GROUP BY date(R.date / 1000, 'unixepoch')
             ORDER BY date;`, (obj) => ({ date: obj.date, delta: obj.delta }), { ":category_id": category_id });
     }
-    async get_activity(year) {
-        const begin = Date.UTC(year, 0, 1);
-        const end = Date.UTC(year + 1, 0, 1);
+    async get_activity(begin, end) {
         return await this.db_driver.query(`
             WITH RECURSIVE timeline AS (
                 SELECT date(:begin / 1000, 'unixepoch') AS date

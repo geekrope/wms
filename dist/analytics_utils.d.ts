@@ -22,7 +22,7 @@ export declare class Analytics {
     constructor(db_driver: IDatabaseDriver, manager: DatabaseManager);
     private resolve_category_id;
     get_category_events(category: string): Promise<TimelineEvent[]>;
-    get_activity(year: number): Promise<ActivityCount[]>;
+    get_activity(begin: number, end: number): Promise<ActivityCount[]>;
     get_category_timeline(category: string): Promise<TimelinePoint[]>;
 }
 //# sourceMappingURL=analytics_utils.d.ts.map

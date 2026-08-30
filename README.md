@@ -7,8 +7,8 @@ The project implements a lightweight Warehouse Management System via an SQLite d
 
 # Tech Stack
 * **Database / Queries:** SQLite
-* **Graph visualization:** [network-vis](https://github.com/visjs/vis-network)
-* **Stats:** [math.js](https://github.com/SatyamV7/MathJS), [statistics.js](https://github.com/thisancog/statistics.js)
+* **Graph visualization:** [vis-network](https://github.com/visjs/vis-network)
+* **Stats:** [math.js](https://github.com/josdejong/mathjs), [statistics.js](https://github.com/thisancog/statistics.js)
 * **Frontend:** TypeScript, HTML5, CSS3
 
 ## Key Algorithms & Logic

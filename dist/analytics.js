@@ -19,7 +19,7 @@ export async function refresh_analytics() {
     analytics_category_input.categories = get_category_titles();
     await refresh_regression_plot();
     const heatmap_container = get_element("analyticsHeatmapContainer");
-    await refresh_activity_plot(heatmap_container, new Date().getFullYear());
+    await refresh_activity_plot(heatmap_container);
 }
 export async function init_analytics(db_driver, manager) {
     analytics_object = new Analytics(db_driver, manager);

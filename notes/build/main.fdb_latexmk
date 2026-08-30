@@ -1,5 +1,5 @@
 # Fdb version 4
-["pdflatex"] 1786822285.58854 "/workspaces/python projects/accouting_v2/notes/main.tex" "build/main.pdf" "main" 1786822289.18814 0
+["pdflatex"] 1787877447.79224 "/workspaces/python projects/wms/notes/main.tex" "build/main.pdf" "main" 1787877451.38703 0
   "/root/.texlive2026/texmf-var/fonts/tfm/lh/lh-t2a/labx1440.tfm" 1782676379.38298 3304 6a543c07045572737981351171e0505e ""
   "/root/.texlive2026/texmf-var/fonts/tfm/lh/lh-t2a/larm1440.tfm" 1782675857.47979 3256 3daaa33cf35cf3f354983aa3214ecd7f ""
   "/root/.texlive2026/texmf-var/fonts/tfm/lh/lh-t2a/larm2074.tfm" 1782675854.00763 3264 03c2b9e4787a40d3b9c197c38b93b558 ""
@@ -200,7 +200,6 @@
   "/usr/local/texlive/2026/texmf-dist/tex/latex/tools/array.sty" 1780258940 17611 1fdd60d12fed6aebd140f4d060571642 ""
   "/usr/local/texlive/2026/texmf-dist/tex/latex/tools/calc.sty" 1780258940 10374 6789dee941e798d7dec57bf0589f67f6 ""
   "/usr/local/texlive/2026/texmf-dist/tex/latex/tools/longtable.sty" 1780258940 16761 72eba725e75c70a71d7559a1c5f9dcd5 ""
-  "/usr/local/texlive/2026/texmf-dist/tex/latex/twemojis/all-twemojis.pdf" 1649196068 6929935 ee9e2f86db9826b04bf934489894b942 ""
   "/usr/local/texlive/2026/texmf-dist/tex/latex/twemojis/twemojis.sty" 1649196068 365308 f83b238af2ba6ee3863a4efa272f41c8 ""
   "/usr/local/texlive/2026/texmf-dist/tex/latex/url/url.sty" 1388531844 12796 8edb7d69a20b857904dd0ea757c14ec9 ""
   "/usr/local/texlive/2026/texmf-dist/tex/latex/xcolor/xcolor.sty" 1727642399 55384 b454dec21c2d9f45ec0b793f0995b992 ""
@@ -208,18 +207,18 @@
   "/usr/local/texlive/2026/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1780811702 5573038 ad3e0d8c63dbec7957113a2386d66888 ""
   "/usr/local/texlive/2026/texmf-var/web2c/pdftex/pdflatex.fmt" 1780811835 3656659 60ee7c36113fafeac37a56118f9c0f85 ""
   "/usr/local/texlive/2026/texmf.cnf" 1780811698 455 5b996dcaa0eb4ef14a83b026bc0a008c ""
-  "/workspaces/python projects/accouting_v2/notes/main.tex" 1786822250.5907 1484 51eda014f0115e568bebf4e2734d4d8b ""
+  "/workspaces/python projects/wms/notes/main.tex" 1787877427.90496 1441 0c8df3db02afdd94a760123275c56e86 ""
   "bounds_comparison.pdf" 1785102544.92981 118178 65448445b20e1b626280a2f853637625 ""
   "box_muller.tex" 1786751570.98287 7102 89f5fc3ea2075736bb7c32955802643b ""
-  "build/main.aux" 1786822288.96853 4402 1ba32d928106680c8c18188e4f97cc30 "pdflatex"
-  "build/main.out" 1786822288.97274 1078 18e8c84f47a7278e3f2a32c4e8da0a87 "pdflatex"
-  "build/main.toc" 1786822288.9767 683 72cf62a9655ecf363205d8cd67a3bc91 "pdflatex"
+  "build/main.aux" 1787877451.18467 4402 1ba32d928106680c8c18188e4f97cc30 "pdflatex"
+  "build/main.out" 1787877451.19182 1078 18e8c84f47a7278e3f2a32c4e8da0a87 "pdflatex"
+  "build/main.toc" 1787877451.19655 683 72cf62a9655ecf363205d8cd67a3bc91 "pdflatex"
   "cdf_approximation.tex" 1785934152.18281 14895 b8e250602cb80a22cb02136a5223c23c ""
   "cdf_qq.pdf" 1785102539.35616 210390 b3ae08152cbf295be6287c3e9d1e4d6a ""
   "heap_asymptotics.tex" 1786822056.18948 2859 f8c45236d1402c15d7a724dac20a5cb5 ""
   "hoeffding.pdf" 1785102540.71863 117891 bd8aca0436f9255ac23a664e7e6fdf5e ""
   "linear_regression.tex" 1786821984.20746 17269 f1be7a3d61bf8e99da1a94ff8f9cc281 ""
-  "main.tex" 1786822250.5907 1484 51eda014f0115e568bebf4e2734d4d8b ""
+  "main.tex" 1787877427.90496 1441 0c8df3db02afdd94a760123275c56e86 ""
   (generated)
   "build/main.aux"
   "build/main.log"
