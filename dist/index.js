@@ -24,7 +24,8 @@ let categories = [];
 let boxes = [];
 function setup_navigation() {
     document.querySelectorAll('.nav-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
+        tab.addEventListener('click', (event) => {
+            event.preventDefault();
             const page = tab.getAttribute('data-page');
             navigate_to(page);
         });

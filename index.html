@@ -23,18 +23,18 @@
         <div class="header-content">
             <h1>📦 <span data-locale="version"></span></h1>
             <nav class="nav-tabs">
-                <button class="nav-tab active" data-page="intake">📥 <span
-                        data-locale="page_title_intake"></span></button>
-                <button class="nav-tab" data-page="item_management">🏬 <span
-                        data-locale="page_title_storage"></span></button>
-                <button class="nav-tab" data-page="category_management">🏷️ <span
-                        data-locale="page_title_categories"></span></button>
-                <button class="nav-tab" data-page="boxes_management">🗃️ <span
-                        data-locale="page_title_boxes"></span></button>
-                <button class="nav-tab" data-page="backup">💾 <span data-locale="page_title_restore"></span></button>
-                <button class="nav-tab" data-page="dashboard">💻 <span
-                        data-locale="page_title_dashboard"></span></button>
-                <button class="nav-tab" data-page="stats">📊 <span data-locale="page_title_stats"></span></button>
+                <a class="nav-tab active" href="?location=intake" data-page="intake">📥 <span
+                        data-locale="page_title_intake"></span></a>
+                <a class="nav-tab" href="?location=item_management" data-page="item_management">🏬 <span
+                        data-locale="page_title_storage"></span></a>
+                <a class="nav-tab" href="?location=category_management" data-page="category_management">🏷️ <span
+                        data-locale="page_title_categories"></span></a>
+                <a class="nav-tab" href="?location=boxes_management" data-page="boxes_management">🗃️ <span
+                        data-locale="page_title_boxes"></span></a>
+                <a class="nav-tab" href="?location=backup" data-page="backup">💾 <span data-locale="page_title_restore"></span></a>
+                <a class="nav-tab" href="?location=dashboard" data-page="dashboard">💻 <span
+                        data-locale="page_title_dashboard"></span></a>
+                <a class="nav-tab" href="?location=stats" data-page="stats">📊 <span data-locale="page_title_stats"></span></a>
             </nav>
         </div>
     </header>
@@ -230,6 +230,7 @@
 
                 <div class="card">
                     <h2>🗓️ Activity</h2>
+                    <div style="margin-bottom: 10px;">🔥Streak: <span id="streakLabel"></span>, Max:  <span id="maxStreakLabel"></span></div>
                     <div id="analyticsHeatmapContainer" style="width: 100%; max-height: 220px;"></div>
                 </div>
 
@@ -247,7 +248,7 @@
     </div>
 
     <script type="module">
-        //import { HeapTests, DatabaseTests, debug } from './dist/tests.js';
+        import { GraphTests, DatabaseTests, AnalyticsTests, debug } from './dist/tests.js';
         import { renderPattern, localizeDOM } from './dist/vocab.js';
         import { main, navigate_to, handle_navigation } from './dist/index.js';
         import * as ModelView from './src/modules/model-viewer.js';
@@ -262,10 +263,11 @@
             await handle_navigation();
         });
 
-        //if (debug) {
-        //    HeapTests.run();
-        //    DatabaseTests.run();
-        //}
+        if (debug) {
+            GraphTests.run();
+            DatabaseTests.run();
+            AnalyticsTests.run();
+        }
     </script>
 </body>
 

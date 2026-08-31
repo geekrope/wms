@@ -35,7 +35,8 @@ let boxes: Box[] = [];
 
 function setup_navigation(): void {
     document.querySelectorAll('.nav-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
+        tab.addEventListener('click', (event) => {
+            event.preventDefault();
             const page = tab.getAttribute('data-page') as Page;
             navigate_to(page);
         });

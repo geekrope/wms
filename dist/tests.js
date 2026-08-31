@@ -1,443 +1,487 @@
-/*import { heapify, insert, erase, partial_heapsort } from './heap.js';
-import { Item, item_less } from './types.js';
-import { DatabaseManager } from './main.js';
-import { SqlJsDriver } from './db_driver.js';
-import { DummyPersistenceAdapter } from './persistence.js';*/
-/*type AssertFunc = (condition: boolean, name: string) => void;*/
+import { Item } from "./types.js";
+import { DatabaseManager } from "./main.js";
+import { SqlJsDriver } from "./db_driver.js";
+import { DummyPersistenceAdapter } from "./persistence.js";
+import { dijkstra, detect_cycle, build_graph, ValueNode } from "./graph_utils.js";
+import { Analytics } from "./analytics_utils.js";
 export const debug = true;
-//TODO: rewrite
-/*export function assertFactory() {
+export function assertFactory() {
     let passed = 0;
     let total = 0;
-
-    const assert = (condition: boolean, name: string) => {
+    const assert = (condition, name) => {
         total++;
         if (condition) {
             passed++;
             console.log(`✅ PASS: ${name}`);
-        } else {
+        }
+        else {
             console.error(`❌ FAIL: ${name}`);
         }
     };
-
     return {
         assert,
         getStats: () => ({ passed, total })
     };
 }
-
-export const HeapTests = {
-    // --- HELPERS ---
-    isValid: (container: Array<Item>) => {
-        for (let i = 0; i < container.length; i++) {
-            const left = 2 * i + 1;
-            const right = 2 * i + 2;
-            if (left < container.length && item_less(container[left], container[i])) return false;
-            if (right < container.length && item_less(container[right], container[i])) return false;
+// --- SHARED HELPERS ---
+async function create_test_database() {
+    const SQL = await window.initSqlJs({
+        locateFile: (file) => `./src/modules/${file}`
+    });
+    const db = new SQL.Database();
+    const driver = new SqlJsDriver(db, new DummyPersistenceAdapter());
+    const manager = new DatabaseManager(driver);
+    return { manager, driver };
+}
+async function get_category_id(manager, title) {
+    const categories = await manager.get_categories();
+    const found = categories.find(c => c.title === title);
+    if (found?.id === undefined)
+        throw new Error(`Category "${title}" not found in test fixture`);
+    return found.id;
+}
+async function get_box_id(manager, title) {
+    const boxes = await manager.get_boxes();
+    const found = boxes.find(b => b.title === title);
+    if (found?.id === undefined)
+        throw new Error(`Box "${title}" not found in test fixture`);
+    return found.id;
+}
+// ==================================================================
+// GRAPH ALGORITHM TESTS (graph_utils.ts)
+// ==================================================================
+function init_labels(nodes) {
+    return new Map(nodes.map(n => [n, 0]));
+}
+export const GraphTests = {
+    // --- 1. DIJKSTRA ---
+    testDijkstraFindsShortestPaths(assert) {
+        const a = new ValueNode("A");
+        const b = new ValueNode("B");
+        const c = new ValueNode("C");
+        const d = new ValueNode("D");
+        a.add_successor(b, 2);
+        a.add_successor(c, 5);
+        b.add_successor(c, 1);
+        b.add_successor(d, 10);
+        c.add_successor(d, 2);
+        const distances = dijkstra(a);
+        assert(distances.get(a) === 0, "Distance to the start node is 0");
+        assert(distances.get(b) === 2, "Shortest distance to B is 2");
+        assert(distances.get(c) === 3, "Shortest distance to C goes through B (2+1=3), not the direct edge (5)");
+        assert(distances.get(d) === 5, "Shortest distance to D goes through B and C (2+1+2=5), not directly through B (2+10=12)");
+    },
+    testDijkstraExcludesUnreachableNodes(assert) {
+        const a = new ValueNode("A");
+        const b = new ValueNode("B");
+        const isolated = new ValueNode("Isolated");
+        a.add_successor(b, 1);
+        const distances = dijkstra(a);
+        assert(distances.has(b), "Reachable node is included in the result");
+        assert(!distances.has(isolated), "Node with no incoming path from start is excluded");
+    },
+    // --- 2. CYCLE DETECTION ---
+    testDetectCycleFindsCycle(assert) {
+        const a = new ValueNode("A");
+        const b = new ValueNode("B");
+        const c = new ValueNode("C");
+        a.add_successor(b, 1);
+        b.add_successor(c, 1);
+        c.add_successor(a, 1);
+        const labels = init_labels([a, b, c]);
+        assert(detect_cycle(labels, a) === true, "Cycle A -> B -> C -> A is detected");
+    },
+    testDetectCycleAcceptsDAG(assert) {
+        const a = new ValueNode("A");
+        const b = new ValueNode("B");
+        const c = new ValueNode("C");
+        const d = new ValueNode("D");
+        a.add_successor(b, 1);
+        a.add_successor(c, 1);
+        b.add_successor(d, 1);
+        const labels = init_labels([a, b, c, d]);
+        assert(detect_cycle(labels, a) === false, "No cycle is reported for a DAG");
+    },
+    testDetectCycleThrowsOnUnlabeledNeighbor(assert) {
+        const a = new ValueNode("A");
+        const b = new ValueNode("B");
+        a.add_successor(b, 1);
+        const labels = init_labels([a]); // "b" is intentionally left unlabeled
+        let threw = false;
+        try {
+            detect_cycle(labels, a);
         }
-        return true;
-    },
-
-    random_item: () => new Item(
-        "Default",
-        Math.floor(Math.random() * 1000),
-        Math.floor(Math.random() * 50),
-        Math.floor(Math.random() * 3)
-    ),
-
-    equal: (a: Item, b: Item) => a.category == b.category &&
-        a.expiration_date == b.expiration_date &&
-        a.box_id == b.box_id &&
-        a.status == b.status,
-
-    // --- 1. HEAPIFY ---
-    testHeapify(assert: AssertFunc) {
-        const arr = [
-            new Item("Default", 10, 1, 0),
-            new Item("Default", 5, 1, 1),
-            new Item("Default", 1, 1, 0),
-        ];
-
-        heapify(arr, item_less);
-        assert(this.isValid(arr), "Heapify produces valid heap");
-
-        assert(arr[0].status === 1, "Heapify puts highest-priority status on top");
-    },
-
-    // --- 2. INSERT ---
-    testInsert(assert: AssertFunc) {
-        const heap: Array<Item> = [];
-
-        insert(heap, new Item("Default", 10, 1, 0), item_less);
-        insert(heap, new Item("Default", 5, 1, 0), item_less);
-        insert(heap, new Item("Default", 20, 1, 1), item_less);
-
-        assert(this.isValid(heap), "Insert maintains heap property");
-        assert(heap[0].status === 1, "Insert bubbles high-priority item to top");
-    },
-
-    // --- 3. ERASE ---
-    testErase(assert: AssertFunc) {
-        const heap = [
-            new Item("Default", 10, 1, 0),
-            new Item("Default", 5, 1, 1),
-            new Item("Default", 20, 1, 0),
-            new Item("Default", 1, 1, 1),
-        ];
-
-        heapify(heap, item_less);
-
-        erase(heap, 0, item_less);
-        assert(this.isValid(heap), "Erase root keeps heap valid");
-
-        const last_idx = heap.length - 1;
-        erase(heap, last_idx, item_less);
-        assert(this.isValid(heap), "Erase leaf keeps heap valid");
-
-        const h2 = [10, 20, 30, 40, 50].map(v => new Item("Default", v, 0, 0));
-        h2[4] = new Item("Default", 1, 0, 2);
-        erase(h2, 1, item_less);
-        assert(h2[0].status === 2, "Erase correctly triggers sift-up");
-    },
-
-    // --- 4. COMPARATOR ---
-    testComparator(assert: AssertFunc) {
-        const ok = new Item("Default", 10, 1, 0);
-        const damaged = new Item("Default", 10, 1, 1);
-
-        assert(item_less(damaged, ok), "Damaged beats ideal");
-
-        const early = new Item("Default", 5, 1, 0);
-        const late = new Item("Default", 10, 1, 0);
-
-        assert(item_less(early, late), "Earlier expiration wins");
-
-        const big_box = new Item("Default", 10, 10, 0);
-        const small_box = new Item("Default", 10, 1, 0);
-
-        assert(item_less(big_box, small_box), "Bigger box wins tie");
-    },
-
-    // --- 5. PARTIAL HEAPSORT ---
-    testPartialHeapsort(assert: AssertFunc) {
-        const arr = [];
-        for (let i = 0; i < 100; i++) arr.push(this.random_item());
-        heapify(arr, item_less);
-
-        let ptr = arr.length - 1;
-        const page_size = 10;
-        const all_sorted: Array<Item> = [];
-
-        while (ptr >= 0) {
-            const { sorted, ptr: next_ptr } = partial_heapsort(arr, ptr, page_size, item_less);
-            all_sorted.push(...sorted);
-            ptr = next_ptr;
-
-            if (ptr >= 0) {
-                assert(this.isValid(arr.slice(0, ptr + 1)), "Heap property preserved after partial sort page");
-            }
+        catch {
+            threw = true;
         }
-
-        assert(all_sorted.length === 100, "All items extracted via partial heapsort pages");
-
-        let ok = true;
-        for (let i = 1; i < all_sorted.length; i++) {
-            if (item_less(all_sorted[i], all_sorted[i - 1])) {
-                ok = false;
-                break;
-            }
-        }
-
-        assert(ok, "Partial heapsort produces priority-ordered sequence");
-
-        const arr2 = [
-            new Item("Default", 5, 1, 0),
-            new Item("Default", 1, 1, 2),
-            new Item("Default", 10, 1, 0),
-            new Item("Default", 2, 1, 1),
-        ];
-        heapify(arr2, item_less);
-
-        const s2 = partial_heapsort(arr2, arr2.length - 1, 2, item_less);
-
-        assert(s2.sorted[0].status === 2, "Partial heapsort extracts highest-priority item first");
-        assert(s2.sorted.length === 2, "Partial heapsort extracts requested batch size");
-        assert(s2.ptr === 1, "Partial heapsort updates ptr correctly");
+        assert(threw, "detect_cycle throws when a neighbor has no entry in the labels map");
     },
-
-    // --- 6. STRESS ---
-    testStress(assert: AssertFunc) {
-        const heap: Array<Item> = [];
-        const start = Date.now();
-
-        for (let i = 0; i < 1000; i++) {
-            insert(heap, this.random_item(), item_less);
-        }
-
-        assert(this.isValid(heap), "Heap valid after random inserts");
-
-        for (let i = 0; i < 200; i++) {
-            const idx = Math.floor(Math.random() * heap.length);
-            erase(heap, idx, item_less);
-
-            if (!this.isValid(heap)) {
-                assert(false, "Heap broke during random erase");
-                return;
-            }
-        }
-
-        assert(true, `Heap survives random operations. Time elapsed: ${Date.now() - start} ms`);
+    // --- 3. GRAPH CONSTRUCTION ---
+    testBuildGraphRoutesOrphansThroughEntry(assert) {
+        const boxes = ["A", "B", "C"];
+        const weights = new Map();
+        const adjacency = [{ v: "A", u: "B" }];
+        const { entry, nodes } = build_graph(boxes, weights, adjacency);
+        assert(nodes.size === 3, "All boxes get a node");
+        assert(entry.successors.has(nodes.get("A")), "A is never a target, so it's an orphan linked from entry");
+        assert(entry.successors.has(nodes.get("C")), "C has no edges at all, so it's an orphan linked from entry");
+        assert(!entry.successors.has(nodes.get("B")), "B is targeted by an edge, so it's not an orphan");
     },
-
-    // --- 7. CONSISTENCY ---
-    testBruteForceIntegrity(assert: AssertFunc) {
-        const size = 200;
-        const raw_data: Array<Item> = [];
-
-        // 1. Generate chaotic data
-        for (let i = 0; i < size; i++) {
-            raw_data.push(new Item(
-                "Default",
-                Math.floor(Math.random() * 1000), // expiration days
-                Math.floor(Math.random() * 10),   // box number
-                Math.floor(Math.random() * 3)    // status
-            ));
-        }
-
-        heapify(raw_data, item_less);
-
-        // 2. Perform partial heapsort in chunks until exhausted
-        let ptr = raw_data.length - 1;
-        const sorted: Array<Item> = [];
-        const chunk_size = 25;
-
-        while (ptr >= 0) {
-            const res = partial_heapsort(raw_data, ptr, chunk_size, item_less);
-            sorted.push(...res.sorted);
-            ptr = res.ptr;
-
-            if (ptr >= 0) {
-                if (!this.isValid(raw_data.slice(0, ptr + 1))) {
-                    assert(false, "Heap integrity broken between partial heapsort steps");
-                    return;
-                }
-            }
-        }
-
-        let is_order_correct = true;
-
-        for (let i = 0; i < sorted.length; i++) {
-            const current = sorted[i];
-
-            // Check: Priority Order
-            // Does the item at i-1 actually have higher or equal priority than item at i?
-            if (i > 0 && item_less(current, sorted[i - 1])) {
-                console.error(`[ORDER ERROR] Item at index ${i} has higher priority than its predecessor`);
-                is_order_correct = false;
-            }
-        }
-
-        assert(sorted.length === size, "All elements extracted during brute force partial sort");
-        assert(is_order_correct, "Final array is correctly ordered by priority");
-        assert(ptr === -1, "Heap pointer reaches -1 when fully exhausted");
+    testBuildGraphAssignsSourceWeightToEdge(assert) {
+        const boxes = ["A", "B"];
+        const weights = new Map([["A", 7]]);
+        const adjacency = [{ v: "A", u: "B" }];
+        const { nodes } = build_graph(boxes, weights, adjacency);
+        assert(nodes.get("A").successors.get(nodes.get("B")) === 7, "Edge weight is taken from the source box's weight");
     },
-
-    testPriorityInvariant: (assert: AssertFunc) => {
-        const heap: Array<Item> = [];
-
-        insert(heap, new Item("Default", 100, 1, 1), item_less);
-        insert(heap, new Item("Default", 999, 1, 2), item_less);
-
-        assert(heap[0].status === 2, "Critical always outranks damaged regardless of date");
+    testBuildGraphDefaultsMissingWeightToZero(assert) {
+        const boxes = ["A", "B"];
+        const weights = new Map(); // no entry for "A"
+        const adjacency = [{ v: "A", u: "B" }];
+        const { nodes } = build_graph(boxes, weights, adjacency);
+        assert(nodes.get("A").successors.get(nodes.get("B")) === 0, "A missing weight entry defaults to 0");
     },
-
+    testBuildGraphSkipsEdgesReferencingUnknownBoxes(assert) {
+        const boxes = ["A"];
+        const weights = new Map();
+        const adjacency = [{ v: "A", u: "Ghost" }, { v: "Ghost", u: "A" }];
+        let result;
+        let threw = false;
+        try {
+            result = build_graph(boxes, weights, adjacency);
+        }
+        catch {
+            threw = true;
+        }
+        assert(!threw, "Edges referencing boxes outside the given list are skipped, not thrown");
+        assert(result !== undefined && result.nodes.size === 1, "Only known boxes end up with nodes");
+    },
     // --- RUNNER ---
     run() {
-        console.log("🚀 Heap Test Suite (priority-based)");
-
+        console.log("🕸️  Graph Algorithm Test Suite");
         const { assert, getStats } = assertFactory();
-
-        this.testHeapify(assert);
-        this.testInsert(assert);
-        this.testErase(assert);
-        this.testComparator(assert);
-        this.testPartialHeapsort(assert);
-        this.testStress(assert);
-        this.testPriorityInvariant(assert);
-        this.testBruteForceIntegrity(assert);
-
+        this.testDijkstraFindsShortestPaths(assert);
+        this.testDijkstraExcludesUnreachableNodes(assert);
+        this.testDetectCycleFindsCycle(assert);
+        this.testDetectCycleAcceptsDAG(assert);
+        this.testDetectCycleThrowsOnUnlabeledNeighbor(assert);
+        this.testBuildGraphRoutesOrphansThroughEntry(assert);
+        this.testBuildGraphAssignsSourceWeightToEdge(assert);
+        this.testBuildGraphDefaultsMissingWeightToZero(assert);
+        this.testBuildGraphSkipsEdgesReferencingUnknownBoxes(assert);
         const { passed, total } = getStats();
-
         console.log("-----------------------------------");
         console.log(`Results: ${passed}/${total} tests passed.`);
-
         return passed === total;
     }
 };
-
+// ==================================================================
+// DATABASE MANAGER TESTS (main.ts)
+// ==================================================================
 export const DatabaseTests = {
-    // --- HELPERS ---
-    createTestDatabase: async () => {
-        const initSqlJs = (window as any).initSqlJs;
-        const SQL = await initSqlJs({
-            locateFile: (file: string) => {
-                return `./src/modules/${file}`;
-            }
-        });
-        const db = new SQL.Database();
-        const driver = new SqlJsDriver(db, new DummyPersistenceAdapter());
-        const manager = new DatabaseManager(driver);
-        return manager;
-    },
-
     // --- 1. TABLE INITIALIZATION ---
-    testInitTables: async (assert: AssertFunc) => {
-        const manager = await DatabaseTests.createTestDatabase();
+    async testInitTables(assert) {
+        const { manager } = await create_test_database();
         try {
             await manager.init_tables();
             assert(true, "Tables initialized successfully");
-        } catch (e) {
+        }
+        catch (e) {
             assert(false, `Table initialization failed: ${e}`);
         }
     },
-
-    // --- 2. ADD CATEGORIES ---
-    testAddCategories: async (assert: AssertFunc) => {
-        const manager = await DatabaseTests.createTestDatabase();
+    // --- 2. CATEGORIES ---
+    async testAddAndGetCategories(assert) {
+        const { manager } = await create_test_database();
         await manager.init_tables();
-        
-        try {
-            await manager.add_categories({title: "Tuna", weight: 200}, {title: "Tushonka", weight: 200});
-            const categories = await manager.get_categories();
-            assert(categories.length === 2, `Expected 2 categories, got ${categories.length}`);
-            assert(categories.some(cat => cat.title == "Tuna"), "Tuna category not found");
-            assert(categories.some(cat => cat.title == "Tushonka"), "Tushonka category not found");
-        } catch (e) {
-            assert(false, `Add categories failed: ${e}`);
-        }
+        await manager.add_categories({ id: undefined, title: "Tuna", weight: 200 }, { id: undefined, title: "Tushonka", weight: 150 });
+        const categories = await manager.get_categories();
+        assert(categories.length === 2, `Expected 2 categories, got ${categories.length}`);
+        assert(categories[0]?.title === "Tuna", "Categories come back ordered alphabetically by title");
     },
-
-    // --- 3. ADD ITEMS ---
-    testAddItems: async (assert: AssertFunc) => {
-        const manager = await DatabaseTests.createTestDatabase();
+    async testAddCategoriesUpsertsOnConflict(assert) {
+        const { manager } = await create_test_database();
         await manager.init_tables();
-        await manager.add_categories({title: "TestCat", weight: 200});
-        
-        try {
-            await manager.add_items(new Item("TestCat", Date.now() + 1000000, 1, 0));
-            await manager.add_items(new Item("TestCat", Date.now() + 2000000, 2, 1));
-            const items = await manager.get_items("TestCat");
-            assert(items.length === 2, `Expected 2 items, got ${items.length}`);
-        } catch (e) {
-            assert(false, `Add items failed: ${e}`);
-        }
+        await manager.add_categories({ id: undefined, title: "Meat", weight: 100 });
+        await manager.add_categories({ id: undefined, title: "Meat", weight: 250 });
+        const categories = await manager.get_categories();
+        assert(categories.length === 1, "Re-adding the same title doesn't create a duplicate row");
+        assert(categories[0]?.weight === 250, "Re-adding the same title updates its weight");
     },
-
-    // --- 4. GET ITEMS ---
-    testGetItems: async (assert: AssertFunc) => {
-        const manager = await DatabaseTests.createTestDatabase();
+    async testRemoveCategoryBlockedByActiveItems(assert) {
+        const { manager } = await create_test_database();
         await manager.init_tables();
-        await manager.add_categories({title: "Food", weight: 200});
-        await manager.add_items(new Item("Food", Date.now() + 1000000, 1, 0));
-        await manager.add_items(new Item("Food", Date.now() + 2000000, 2, 0));
-        
+        await manager.add_categories({ id: undefined, title: "Fish", weight: 200 });
+        await manager.add_boxes({ id: undefined, title: "Shelf", max_load: null });
+        await manager.add_items(new Item("Fish", Date.now() + 1000000, "Shelf", 0));
+        let threw = false;
         try {
-            const items = await manager.get_items("Food");
-            assert(items.length === 2, `Expected 2 items, got ${items.length}`);
-            assert(items.every(i => i instanceof Item), "Not all items are Item instances");
-        } catch (e) {
-            assert(false, `Get items failed: ${e}`);
+            await manager.remove_category("Fish");
         }
-    },
-
-    // --- 5. REMOVE ITEMS ---
-    testRemoveItems: async (assert: AssertFunc) => {
-        const manager = await DatabaseTests.createTestDatabase();
-        await manager.init_tables();
-        await manager.add_categories({title: "Stuff", weight: 200});
-        await manager.add_items(new Item("Stuff", Date.now() + 1000000, 1));
-        await manager.add_items(new Item("Stuff", Date.now() + 2000000, 2));
-        
-        try {
-            let items = await manager.get_items("Stuff");
-            const initial_count = items.length;
-            
-            // Assuming first item has id=1
-            await manager.remove_item(1);
-            items = await manager.get_items("Stuff");
-            assert(items.length === initial_count - 1, "Item was not removed");
-        } catch (e) {
-            assert(false, `Remove item failed: ${e}`);
+        catch {
+            threw = true;
         }
+        assert(threw, "Cannot remove a category still linked to an active item");
     },
-
-    // --- 6. UPDATE ITEMS ---
-    testUpdateItems: async (assert: AssertFunc) => {
-        const manager = await DatabaseTests.createTestDatabase();
+    async testRemoveCategorySucceedsAfterItemRemoved(assert) {
+        const { manager } = await create_test_database();
         await manager.init_tables();
-        await manager.add_categories({title: "Boxes", weight: 200});
-        await manager.add_items(new Item("Boxes", Date.now() + 1000000, 1, 0));
-        
+        await manager.add_categories({ id: undefined, title: "Fish", weight: 200 });
+        await manager.add_boxes({ id: undefined, title: "Shelf", max_load: null });
+        await manager.add_items(new Item("Fish", Date.now() + 1000000, "Shelf", 0));
+        const [item] = await manager.get_items("Fish");
+        await manager.remove_item(item.id);
         try {
-            await manager.update_item(1, { status: 1 });
-            const items = await manager.get_items("Boxes");
-            assert(items.length > 0, "No items found after update");
-            // Note: Verification depends on update_item implementation
-            assert(true, "Update executed without error");
-        } catch (e) {
-            assert(false, `Update item failed: ${e}`);
+            await manager.remove_category("Fish");
+            assert(true, "Category is removable once its items are removed");
         }
+        catch (e) {
+            assert(false, `Expected remove_category to succeed, got: ${e}`);
+        }
+        const categories = await manager.get_categories();
+        assert(!categories.some(c => c.title === "Fish"), "Removed category no longer appears in listings");
     },
-
-    // --- 7. STRESS TEST ---
-    testStressDatabase: async (assert: AssertFunc) => {
-        const manager = await DatabaseTests.createTestDatabase();
+    // --- 3. ITEMS ---
+    async testAddItemsRejectsUnknownCategory(assert) {
+        const { manager } = await create_test_database();
         await manager.init_tables();
-        await manager.add_categories({title: "Stress", weight: 200});
-        
+        await manager.add_boxes({ id: undefined, title: "Shelf", max_load: null });
+        let threw = false;
         try {
-            const start = Date.now();
-            
-            // Add many items
-            for (let i = 0; i < 50; i++) {
-                await manager.add_items(new Item(
-                    "Stress",
-                    Date.now() + Math.random() * 1000000,
-                    Math.floor(Math.random() * 10),
-                    Math.floor(Math.random() * 2)
-                ));
+            await manager.add_items(new Item("Ghost", Date.now(), "Shelf", 0));
+        }
+        catch {
+            threw = true;
+        }
+        assert(threw, "Adding an item with an unknown category throws");
+    },
+    async testAddItemsRejectsUnknownBox(assert) {
+        const { manager } = await create_test_database();
+        await manager.init_tables();
+        await manager.add_categories({ id: undefined, title: "Food", weight: 200 });
+        let threw = false;
+        try {
+            await manager.add_items(new Item("Food", Date.now(), "Ghost", 0));
+        }
+        catch {
+            threw = true;
+        }
+        assert(threw, "Adding an item with an unknown box throws");
+    },
+    async testGetItemsFiltersRemoved(assert) {
+        const { manager } = await create_test_database();
+        await manager.init_tables();
+        await manager.add_categories({ id: undefined, title: "Food", weight: 200 });
+        await manager.add_boxes({ id: undefined, title: "Shelf", max_load: null });
+        await manager.add_items(new Item("Food", Date.now() + 1000000, "Shelf", 0), new Item("Food", Date.now() + 2000000, "Shelf", 0));
+        const [first] = await manager.get_items("Food");
+        await manager.remove_item(first.id);
+        const remaining = await manager.get_items("Food");
+        assert(remaining.length === 1, "Removed item disappears from get_items");
+        assert(remaining[0]?.id !== first.id, "The remaining item is the one that wasn't removed");
+    },
+    async testUpdateItemMovesBoxAndCategory(assert) {
+        const { manager } = await create_test_database();
+        await manager.init_tables();
+        await manager.add_categories({ id: undefined, title: "Canned", weight: 200 }, { id: undefined, title: "Fresh", weight: 100 });
+        await manager.add_boxes({ id: undefined, title: "BoxA", max_load: null }, { id: undefined, title: "BoxB", max_load: null });
+        await manager.add_items(new Item("Canned", Date.now() + 1000000, "BoxA", 0));
+        const [item] = await manager.get_items("Canned");
+        await manager.update_item(item.id, { category: "Fresh", box: "BoxB", status: 1 });
+        const box_a_content = await manager.get_box_content("BoxA");
+        const box_b_content = await manager.get_box_content("BoxB");
+        assert(box_a_content.length === 0, "Item no longer appears in its old box");
+        assert(box_b_content.length === 1, "Item appears in its new box");
+        assert(box_b_content[0]?.status === 1, "Non-relational fields are updated too");
+    },
+    async testGetBoxWeightsSumsActiveItems(assert) {
+        const { manager } = await create_test_database();
+        await manager.init_tables();
+        await manager.add_categories({ id: undefined, title: "Heavy", weight: 10 }, { id: undefined, title: "NoWeight", weight: null });
+        await manager.add_boxes({ id: undefined, title: "Crate", max_load: null });
+        await manager.add_items(new Item("Heavy", Date.now() + 1000000, "Crate", 0), new Item("Heavy", Date.now() + 1000000, "Crate", 0), new Item("NoWeight", Date.now() + 1000000, "Crate", 0));
+        const weights = await manager.get_box_weights();
+        const crate = weights.find(w => w.box === "Crate");
+        assert(crate !== undefined, "Crate appears in the weights report");
+        assert(crate?.total_weight === 20, "Weight is summed across items; a NULL category weight counts as 0");
+    },
+    // --- 4. BOX ADJACENCY ---
+    async testBoxAdjacencyLifecycle(assert) {
+        const { manager } = await create_test_database();
+        await manager.init_tables();
+        await manager.add_boxes({ id: undefined, title: "A", max_load: null }, { id: undefined, title: "B", max_load: null });
+        const a_id = await get_box_id(manager, "A");
+        const b_id = await get_box_id(manager, "B");
+        await manager.add_box_connections([{ v: a_id, u: b_id }]);
+        let adjacency = await manager.get_box_adjacency();
+        assert(adjacency.length === 1, "Connection is recorded");
+        await manager.remove_box_connection(a_id, b_id);
+        adjacency = await manager.get_box_adjacency();
+        assert(adjacency.length === 0, "Connection is removed");
+    },
+    async testRemoveBoxCascadesAdjacency(assert) {
+        const { manager } = await create_test_database();
+        await manager.init_tables();
+        await manager.add_boxes({ id: undefined, title: "A", max_load: null }, { id: undefined, title: "B", max_load: null });
+        const a_id = await get_box_id(manager, "A");
+        const b_id = await get_box_id(manager, "B");
+        await manager.add_box_connections([{ v: a_id, u: b_id }]);
+        await manager.remove_box("A");
+        const adjacency = await manager.get_box_adjacency();
+        const boxes = await manager.get_boxes();
+        assert(adjacency.length === 0, "Removing a box cascades to its adjacency edges");
+        assert(!boxes.some(b => b.title === "A"), "Removed box no longer appears in listings");
+    },
+    // --- 5. RAW SQL ESCAPE HATCH (mocked driver, no real database needed) ---
+    async testRawQueryAndRunDelegateToDriver(assert) {
+        const calls = [];
+        const fake_driver = {
+            async query_raw(sql, params) {
+                calls.push({ method: "query_raw", sql, params });
+                return [{ ok: 1 }];
+            },
+            async query(sql, _ctor, params) {
+                calls.push({ method: "query", sql, params });
+                return [];
+            },
+            async run(sql, params) {
+                calls.push({ method: "run", sql, params });
             }
-            
-            const items = await manager.get_items("Stress");
-            assert(items.length === 50, `Expected 50 items, got ${items.length}`);
-            
-            const elapsed = Date.now() - start;
-            assert(true, `Stress test completed: added 50 items in ${elapsed}ms`);
-        } catch (e) {
-            assert(false, `Stress test failed: ${e}`);
-        }
+        };
+        const manager = new DatabaseManager(fake_driver);
+        const result = await manager.execute_raw("SELECT 1;", []);
+        await manager.run_raw("DELETE FROM items;", []);
+        assert(result[0]?.ok === 1, "execute_raw returns whatever the driver's query_raw returns");
+        assert(calls[0]?.method === "query_raw" && calls[0]?.sql === "SELECT 1;", "execute_raw delegates the exact SQL to the driver");
+        assert(calls[1]?.method === "run" && calls[1]?.sql === "DELETE FROM items;", "run_raw delegates the exact SQL to the driver");
     },
-
     // --- RUNNER ---
     async run() {
-        console.log("🗄️  Database Test Suite");
-
+        console.log("🗄️  Database Manager Test Suite");
         const { assert, getStats } = assertFactory();
-
         await this.testInitTables(assert);
-        await this.testAddCategories(assert);
-        await this.testAddItems(assert);
-        await this.testGetItems(assert);
-        await this.testRemoveItems(assert);
-        await this.testUpdateItems(assert);
-        await this.testStressDatabase(assert);
-
+        await this.testAddAndGetCategories(assert);
+        await this.testAddCategoriesUpsertsOnConflict(assert);
+        await this.testRemoveCategoryBlockedByActiveItems(assert);
+        await this.testRemoveCategorySucceedsAfterItemRemoved(assert);
+        await this.testAddItemsRejectsUnknownCategory(assert);
+        await this.testAddItemsRejectsUnknownBox(assert);
+        await this.testGetItemsFiltersRemoved(assert);
+        await this.testUpdateItemMovesBoxAndCategory(assert);
+        await this.testGetBoxWeightsSumsActiveItems(assert);
+        await this.testBoxAdjacencyLifecycle(assert);
+        await this.testRemoveBoxCascadesAdjacency(assert);
+        await this.testRawQueryAndRunDelegateToDriver(assert);
         const { passed, total } = getStats();
-
         console.log("-----------------------------------");
         console.log(`Results: ${passed}/${total} tests passed.`);
-
         return passed === total;
     }
-};*/ 
+};
+// ==================================================================
+// ANALYTICS TESTS (analytics_utils.ts)
+// ==================================================================
+const DAY_MS = 24 * 60 * 60 * 1000;
+// Bypasses DatabaseManager.add_items/remove_item (which always stamp Date.now())
+// so tests can pin add_date/remove_date to exact, deterministic UTC days.
+async function seed_removed_item(manager, category_id, box_id, add_date, remove_date) {
+    await manager.run_raw(`INSERT INTO items (category_id, box_id, expiration_date, status, add_date, remove_date)
+        VALUES (:category_id, :box_id, 0, 0, :add_date, :remove_date);`, { ":category_id": category_id, ":box_id": box_id, ":add_date": add_date, ":remove_date": remove_date });
+}
+export const AnalyticsTests = {
+    // --- 1. CATEGORY EVENTS ---
+    async testGetCategoryEventsGroupsDeltaByDay(assert) {
+        const { manager, driver } = await create_test_database();
+        await manager.init_tables();
+        await manager.add_categories({ id: undefined, title: "Widgets", weight: 5 });
+        await manager.add_boxes({ id: undefined, title: "Shelf", max_load: null });
+        const category_id = await get_category_id(manager, "Widgets");
+        const box_id = await get_box_id(manager, "Shelf");
+        const analytics = new Analytics(driver, manager);
+        const day1 = Date.UTC(2026, 0, 10);
+        const day2 = day1 + DAY_MS;
+        await seed_removed_item(manager, category_id, box_id, day1, null); // +1 on day1, still active
+        await seed_removed_item(manager, category_id, box_id, day1, day2); // +1 on day1, -1 on day2
+        const events = await analytics.get_category_events("Widgets");
+        assert(events.length === 2, `Expected 2 distinct days of events, got ${events.length}`);
+        assert(events[0]?.date === day1 && events[0]?.delta === 2, "Day 1 nets two additions (+2)");
+        assert(events[1]?.date === day2 && events[1]?.delta === -1, "Day 2 nets one removal (-1)");
+    },
+    async testGetCategoryEventsThrowsForUnknownCategory(assert) {
+        const { manager, driver } = await create_test_database();
+        await manager.init_tables();
+        const analytics = new Analytics(driver, manager);
+        let threw = false;
+        try {
+            await analytics.get_category_events("DoesNotExist");
+        }
+        catch {
+            threw = true;
+        }
+        assert(threw, "get_category_events throws for a category that doesn't exist");
+    },
+    // --- 2. ACTIVITY HEATMAP DATA ---
+    async testGetActivityCountsRemovalsPerDay(assert) {
+        const { manager, driver } = await create_test_database();
+        await manager.init_tables();
+        await manager.add_categories({ id: undefined, title: "Widgets", weight: 5 });
+        await manager.add_boxes({ id: undefined, title: "Shelf", max_load: null });
+        const category_id = await get_category_id(manager, "Widgets");
+        const box_id = await get_box_id(manager, "Shelf");
+        const analytics = new Analytics(driver, manager);
+        const day1 = Date.UTC(2026, 0, 10);
+        const day2 = day1 + DAY_MS;
+        await seed_removed_item(manager, category_id, box_id, day1 - DAY_MS, day1);
+        await seed_removed_item(manager, category_id, box_id, day1 - DAY_MS, day1);
+        await seed_removed_item(manager, category_id, box_id, day1 - DAY_MS, day2);
+        const activity = await analytics.get_activity(day1 - DAY_MS, day2 + DAY_MS);
+        assert(activity.length === 2, `Expected 2 active days, got ${activity.length}`);
+        const day1_entry = activity.find(a => a.date.getTime() === day1);
+        const day2_entry = activity.find(a => a.date.getTime() === day2);
+        assert(day1_entry?.count === 2, "Day 1 has two removals");
+        assert(day2_entry?.count === 1, "Day 2 has one removal");
+    },
+    async testGetActivityEmptyRangeReturnsEmpty(assert) {
+        const { manager, driver } = await create_test_database();
+        await manager.init_tables();
+        await manager.add_categories({ id: undefined, title: "Widgets", weight: 5 });
+        await manager.add_boxes({ id: undefined, title: "Shelf", max_load: null });
+        const analytics = new Analytics(driver, manager);
+        const day1 = Date.UTC(2026, 0, 10);
+        const activity = await analytics.get_activity(day1, day1 + DAY_MS);
+        assert(activity.length === 0, "No removals in range yields an empty activity list");
+    },
+    async testGetActivityRespectsDateBoundaries(assert) {
+        const { manager, driver } = await create_test_database();
+        await manager.init_tables();
+        await manager.add_categories({ id: undefined, title: "Widgets", weight: 5 });
+        await manager.add_boxes({ id: undefined, title: "Shelf", max_load: null });
+        const category_id = await get_category_id(manager, "Widgets");
+        const box_id = await get_box_id(manager, "Shelf");
+        const analytics = new Analytics(driver, manager);
+        const day0 = Date.UTC(2026, 0, 9);
+        const day1 = Date.UTC(2026, 0, 10);
+        const day3 = Date.UTC(2026, 0, 12);
+        await seed_removed_item(manager, category_id, box_id, day0 - DAY_MS, day0); // before range
+        await seed_removed_item(manager, category_id, box_id, day1 - DAY_MS, day1); // inside range
+        await seed_removed_item(manager, category_id, box_id, day3 - DAY_MS, day3); // after range
+        const activity = await analytics.get_activity(day1, day1); // range covers only day1
+        assert(activity.length === 1, `Expected only the in-range removal, got ${activity.length}`);
+        assert(activity[0]?.date.getTime() === day1, "The surviving entry is the one inside the range");
+    },
+    // --- RUNNER ---
+    async run() {
+        console.log("📈 Analytics Test Suite");
+        const { assert, getStats } = assertFactory();
+        await this.testGetCategoryEventsGroupsDeltaByDay(assert);
+        await this.testGetCategoryEventsThrowsForUnknownCategory(assert);
+        await this.testGetActivityCountsRemovalsPerDay(assert);
+        await this.testGetActivityEmptyRangeReturnsEmpty(assert);
+        await this.testGetActivityRespectsDateBoundaries(assert);
+        const { passed, total } = getStats();
+        console.log("-----------------------------------");
+        console.log(`Results: ${passed}/${total} tests passed.`);
+        return passed === total;
+    }
+};
 //# sourceMappingURL=tests.js.map
