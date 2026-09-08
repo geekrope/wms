@@ -31,10 +31,12 @@
                         data-locale="page_title_categories"></span></a>
                 <a class="nav-tab" href="?location=boxes_management" data-page="boxes_management">🗃️ <span
                         data-locale="page_title_boxes"></span></a>
-                <a class="nav-tab" href="?location=backup" data-page="backup">💾 <span data-locale="page_title_restore"></span></a>
+                <a class="nav-tab" href="?location=backup" data-page="backup">💾 <span
+                        data-locale="page_title_restore"></span></a>
                 <a class="nav-tab" href="?location=dashboard" data-page="dashboard">💻 <span
                         data-locale="page_title_dashboard"></span></a>
-                <a class="nav-tab" href="?location=stats" data-page="stats">📊 <span data-locale="page_title_stats"></span></a>
+                <a class="nav-tab" href="?location=stats" data-page="stats">📊 <span
+                        data-locale="page_title_stats"></span></a>
             </nav>
         </div>
     </header>
@@ -205,15 +207,39 @@
                 <div class="card">
                     <h2>📊 <span data-locale="page_title_stats"></span></h2>
 
-                    <div style="color: #2c3e50; margin-bottom: 20px;">
-                        The following chart fits the linear regression to the running totals of items added or removed from the inventory over time. The following quantity is computed for each cutoff date:
+                    <p style="text-indent: 30px;">
+                        We want to test the series for the presence of persistent trend. One approach would be to fit a
+                        linear regression to the item counts and perform a t-test:
                         \[t = \frac{\hat{\beta_1} - 0}{\mathrm{SE}(\beta_1)} \sim t_{n - 2}\]
-                        which is t-distributed under the null hypothesis \(H_0: \beta_1 = 0\) <sup><a style="font-size: 10px;" href="./notes/build/main.pdf#section.2">[1]</a></sup>. <br></br>
-                        However the process exhibits a random walk behavior as \(Y_t = Y_{t-1} + \Delta_t\), where we assume the deltas to be <span style="font-style: italic;">i.i.d.</span> normal with mean \(\mu\) and variance \(\sigma^2\). We test the hypothesis \(H_0: \mu \geq 0\) against \(H_1: \mu < 0\) using the t-statistic. For this we use the decomposition \(\Delta_t = \mu + \varepsilon_t\) and fit 1-d linear regression (degenerate case of linear regression) to determine the parameter \(\mu\). The closed form solution is given by \(\hat{\mu} = \overline{\Delta}\) and the t-statistic in this case has \(n-1\) degrees of freedom
-                        \[t = \frac{\overline{\Delta}}{\sqrt{\frac{1}{n - 1}\sum_{t = 1}^{n} (\Delta_t - \overline{\Delta})} / \sqrt{n}} \sim t_{n - 1}\]
-                        <br></br>
-                        The reasoning above invalidates the <span style="font-style: italic;">i.i.d.</span> assumption for the errors in the linear regression model, since the data points are clearly not indepedent as \(\mathrm{Cov} (Y_{t-1}, Y_{t}) = \mathrm{Var}(Y_{t-1}) + \mathrm{Cov}(Y_{t-1}, \Delta_t) = \mathrm{Var}(Y_{t-1}) > 0\) (by independence of deltas). However we keep both test as the first one appears to be more illustrative and takes into account the time spacing.
-                    </div>
+                        which is t-distributed under the null hypothesis \(H_0: \beta_1 = 0\)
+                        <sup>
+                            <a style="font-size: 10px;" href="./notes/build/main.pdf#section.2">[1]</a>
+                        </sup>.
+                    </p>
+                    <br />
+                    <p style="text-indent: 30px;">
+                        However the process exhibits a random walk behavior as \(Y_t = Y_{t-1} + \Delta_t\), where we
+                        assume
+                        the deltas to be
+                        <span style="font-style: italic;">
+                            i.i.d.
+                        </span>
+                        normal with mean \(\mu\) and
+                        variance \(\sigma^2\). We test the hypothesis \(H_0: \mu \geq 0\) against \(H_1: \mu
+                        &lt; 0\) using the t-statistic. For this we use the decomposition \(\Delta_t=\mu +
+                        \varepsilon_t\)
+                        and fit 1-d linear regression (degenerate case of linear regression) to determine the
+                        parameter \(\mu\). The closed form solution is given by \(\hat{\mu}=\overline{\Delta}\) and
+                        the t-statistic in this case has \(n-1\) degrees of freedom
+                        \[t=\frac{\overline{\Delta}}{\sqrt{\frac{1}{n - 1}\sum_{t=1}^{n} (\Delta_t -
+                        \overline{\Delta})^2} / \sqrt{n}} \sim t_{n - 1}\]
+                    </p>
+                    <br />
+                    <p style="text-indent: 30px;">
+                        We perform both tests since the OLS method helps to assess the local behaviour and the
+                        residuals within a short time frame tend to be less correlated.
+                    </p>
+
                     <div id="analyticsCategoryInputContainer" class="form-group"></div>
                     <div class="form-group">
                         <label for="analyticsCutoffSlider">cutoff</label>
@@ -230,7 +256,8 @@
 
                 <div class="card">
                     <h2>🗓️ Activity</h2>
-                    <div style="margin-bottom: 10px;">🔥Streak: <span id="streakLabel"></span>, Max:  <span id="maxStreakLabel"></span></div>
+                    <div style="margin-bottom: 10px;">🔥Streak: <span id="streakLabel"></span>, Max: <span
+                            id="maxStreakLabel"></span></div>
                     <div id="analyticsHeatmapContainer" style="width: 100%; max-height: 220px;"></div>
                 </div>
 
