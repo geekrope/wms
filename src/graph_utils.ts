@@ -1,11 +1,9 @@
-import { insert, erase } from "./heap.js";
-
 export abstract class Node<T> {
-    readonly successors: Map<Node<T>, number> = new Map();
+    readonly successors: Set<Node<T>> = new Set();
     readonly predecessors: Set<Node<T>> = new Set();
 
-    add_successor(node: Node<T>, weight: number): void {
-        this.successors.set(node, weight);
+    add_successor(node: Node<T>): void {
+        this.successors.add(node);
         node.predecessors.add(this);
     }
 
@@ -26,33 +24,64 @@ export class EntryNode<T> extends Node<T> {
 
 export type AdjacencyList<T = number> = { v: T, u: T }[];
 
-export function dijkstra<T>(start: Node<T>): Map<Node<T>, number> {
-    const distances = new Map<Node<T>, number>();
-    const distance_heap: { key: Node<T>, value: number }[] = [];
-    const less = (a: { key: Node<T>, value: number }, b: { key: Node<T>, value: number }) => a.value < b.value;
+function topological_sort_aux<T>(entry: Node<T>, result: Node<T>[]) {
+    for (const child of entry.successors) {
+        topological_sort_aux(child, result)
+    }
+    result.push(entry);
+}
 
-    insert(distance_heap, { key: start, value: 0 }, less);
+function topological_sort<T>(entry: Node<T>) {
+    const result: Node<T>[] = [];
+    topological_sort_aux(entry, result);
+    return result.reverse();
+}
 
-    while (distance_heap.length > 0) {
-        const current = distance_heap[0];
-        erase(distance_heap, 0, less);
+function transitive_closure<T>(entry: Node<T>)
+{
+    const closure: Map<Node<T>, Set<Node<T>>> = new Map();
+    const order = topological_sort(entry);
 
-        if (distances.has(current.key)) { continue; }
-        distances.set(current.key, current.value);
-
-        for (const [neighbor, weight] of current.key.successors.entries()) {
-            if (distances.has(neighbor)) { continue; }
-            insert(distance_heap, { key: neighbor, value: current.value + weight }, less);
+    for(const node of order)
+    {
+        closure.set(node, new Set<Node<T>>())
+        closure.get(node)!.add(node);
+        for(const pred of node.predecessors)
+        {
+            for(const acc_node of closure.get(pred)!)
+            {
+                closure.get(node)!.add(acc_node);
+            }            
         }
     }
 
-    return distances;
+    return closure;
+}
+
+export function compute_costs<T>(entry: Node<T>, weights: Map<T, number>): Map<Node<T>, number>
+{
+    const closure = transitive_closure(entry);
+    const costs: Map<Node<T>, number> = new Map();
+    for(const [node, conn_list] of closure)
+    {
+        let cost = 0;
+        for(const conn of conn_list)
+        {
+            if(conn === node) continue; // only what's pressing on the node counts, not the node itself
+            if(conn instanceof ValueNode)
+            {
+                cost += weights.get(conn.value) ?? 0;
+            }
+        }
+        costs.set(node, cost);
+    }
+    return costs;
 }
 
 export function detect_cycle<T>(labels: Map<Node<T>, number>, start: Node<T>): boolean {
     labels.set(start, 1);
 
-    for (const neighbor of start.successors.keys()) {
+    for (const neighbor of start.successors) {
         const label = labels.get(neighbor);
 
         if (label === undefined) throw new Error("Node not found in labels");
@@ -72,7 +101,7 @@ export function detect_cycle<T>(labels: Map<Node<T>, number>, start: Node<T>): b
     return false;
 }
 
-export function build_graph<T>(boxes: T[], weights: Map<T, number>, adjacency_list: AdjacencyList<T>): { entry: EntryNode<T>, nodes: Map<T, ValueNode<T>> } {
+export function build_graph<T>(boxes: T[], adjacency_list: AdjacencyList<T>): { entry: EntryNode<T>, nodes: Map<T, ValueNode<T>> } {
     const entry = new EntryNode<T>();
     const nodes = new Map<T, ValueNode<T>>();
     const orphans: Set<T> = new Set(boxes);
@@ -86,12 +115,12 @@ export function build_graph<T>(boxes: T[], weights: Map<T, number>, adjacency_li
         const to = nodes.get(u);
         if (!from || !to) continue;
 
-        from.add_successor(to, weights.get(v) || 0);
+        from.add_successor(to);
         orphans.delete(u);
     }
 
     for (const box of orphans) {
-        entry.add_successor(nodes.get(box)!, 0);
+        entry.add_successor(nodes.get(box)!);
     }
 
     return { entry, nodes };

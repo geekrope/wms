@@ -1,9 +1,8 @@
-import { insert, erase } from "./heap.js";
 export class Node {
-    successors = new Map();
+    successors = new Set();
     predecessors = new Set();
-    add_successor(node, weight) {
-        this.successors.set(node, weight);
+    add_successor(node) {
+        this.successors.add(node);
         node.predecessors.add(this);
     }
     remove_successor(node) {
@@ -20,30 +19,50 @@ export class ValueNode extends Node {
 }
 export class EntryNode extends Node {
 }
-export function dijkstra(start) {
-    const distances = new Map();
-    const distance_heap = [];
-    const less = (a, b) => a.value < b.value;
-    insert(distance_heap, { key: start, value: 0 }, less);
-    while (distance_heap.length > 0) {
-        const current = distance_heap[0];
-        erase(distance_heap, 0, less);
-        if (distances.has(current.key)) {
-            continue;
-        }
-        distances.set(current.key, current.value);
-        for (const [neighbor, weight] of current.key.successors.entries()) {
-            if (distances.has(neighbor)) {
-                continue;
+function topological_sort_aux(entry, result) {
+    for (const child of entry.successors) {
+        topological_sort_aux(child, result);
+    }
+    result.push(entry);
+}
+function topological_sort(entry) {
+    const result = [];
+    topological_sort_aux(entry, result);
+    return result.reverse();
+}
+function transitive_closure(entry) {
+    const closure = new Map();
+    const order = topological_sort(entry);
+    for (const node of order) {
+        closure.set(node, new Set());
+        closure.get(node).add(node);
+        for (const pred of node.predecessors) {
+            for (const acc_node of closure.get(pred)) {
+                closure.get(node).add(acc_node);
             }
-            insert(distance_heap, { key: neighbor, value: current.value + weight }, less);
         }
     }
-    return distances;
+    return closure;
+}
+export function compute_costs(entry, weights) {
+    const closure = transitive_closure(entry);
+    const costs = new Map();
+    for (const [node, conn_list] of closure) {
+        let cost = 0;
+        for (const conn of conn_list) {
+            if (conn === node)
+                continue; // only what's pressing on the node counts, not the node itself
+            if (conn instanceof ValueNode) {
+                cost += weights.get(conn.value) ?? 0;
+            }
+        }
+        costs.set(node, cost);
+    }
+    return costs;
 }
 export function detect_cycle(labels, start) {
     labels.set(start, 1);
-    for (const neighbor of start.successors.keys()) {
+    for (const neighbor of start.successors) {
         const label = labels.get(neighbor);
         if (label === undefined)
             throw new Error("Node not found in labels");
@@ -61,7 +80,7 @@ export function detect_cycle(labels, start) {
     labels.set(start, 2);
     return false;
 }
-export function build_graph(boxes, weights, adjacency_list) {
+export function build_graph(boxes, adjacency_list) {
     const entry = new EntryNode();
     const nodes = new Map();
     const orphans = new Set(boxes);
@@ -73,11 +92,11 @@ export function build_graph(boxes, weights, adjacency_list) {
         const to = nodes.get(u);
         if (!from || !to)
             continue;
-        from.add_successor(to, weights.get(v) || 0);
+        from.add_successor(to);
         orphans.delete(u);
     }
     for (const box of orphans) {
-        entry.add_successor(nodes.get(box), 0);
+        entry.add_successor(nodes.get(box));
     }
     return { entry, nodes };
 }

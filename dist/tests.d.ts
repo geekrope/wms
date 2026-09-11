@@ -8,14 +8,14 @@ export declare function assertFactory(): {
     };
 };
 export declare const GraphTests: {
-    testDijkstraFindsShortestPaths(assert: AssertFunc): void;
-    testDijkstraExcludesUnreachableNodes(assert: AssertFunc): void;
+    testComputeCostsSumsWeightOfAncestors(assert: AssertFunc): void;
+    testComputeCostsExcludesOwnWeight(assert: AssertFunc): void;
+    testComputeCostsHandlesDiamondWithoutDoubleCounting(assert: AssertFunc): void;
+    testComputeCostsIgnoresUnreachableNodes(assert: AssertFunc): void;
     testDetectCycleFindsCycle(assert: AssertFunc): void;
     testDetectCycleAcceptsDAG(assert: AssertFunc): void;
     testDetectCycleThrowsOnUnlabeledNeighbor(assert: AssertFunc): void;
     testBuildGraphRoutesOrphansThroughEntry(assert: AssertFunc): void;
-    testBuildGraphAssignsSourceWeightToEdge(assert: AssertFunc): void;
-    testBuildGraphDefaultsMissingWeightToZero(assert: AssertFunc): void;
     testBuildGraphSkipsEdgesReferencingUnknownBoxes(assert: AssertFunc): void;
     run(): boolean;
 };

@@ -3,7 +3,7 @@ import { heapify, partial_heapsort } from "./heap.js";
 import { add_log_entry, get_element, CategoryInput, empty_container } from "./dom_utils.js";
 import { get_db_manager, get_category_titles, get_boxes_list, locate_category } from "./index.js";
 import { renderPattern, repr } from "./vocab.js";
-import { dijkstra, build_graph } from "./graph_utils.js";
+import { compute_costs, build_graph } from "./graph_utils.js";
 const page_size = 5;
 let storage_category_input = undefined;
 let heap_ptr = -1;
@@ -13,8 +13,8 @@ let current_category = undefined;
 let current_page = 0;
 let item_comparator = item_less;
 function get_item_comparator(weights, adjacency_list) {
-    const { entry, nodes } = build_graph(Array.from(weights.keys()), weights, adjacency_list);
-    const priorities = dijkstra(entry);
+    const { entry, nodes } = build_graph(Array.from(weights.keys()), adjacency_list);
+    const priorities = compute_costs(entry, weights);
     return (a, b) => {
         if (a.status != b.status)
             return a.status > b.status;

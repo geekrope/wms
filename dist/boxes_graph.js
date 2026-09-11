@@ -1,14 +1,14 @@
 import { empty_container, get_element } from "./dom_utils.js";
 import { get_db_manager, get_boxes_list } from "./index.js";
 import { renderPattern } from "./vocab.js";
-import { dijkstra, build_graph, detect_cycle } from "./graph_utils.js";
+import { compute_costs, build_graph, detect_cycle } from "./graph_utils.js";
 let network_instance = null;
 async function add_edge(edgeData, callback) {
     const v = Number(edgeData.from);
     const u = Number(edgeData.to);
     const box_ids = this.boxes.map(box => box.id);
     const staged = [...this.adjacency, { v, u }];
-    const { nodes } = build_graph(box_ids, this.weights, staged);
+    const { nodes } = build_graph(box_ids, staged);
     const labels = new Map(Array.from(nodes.values(), node => [node, 0]));
     const start_node = nodes.get(v);
     const has_cycle = start_node !== undefined && detect_cycle(labels, start_node);
@@ -53,8 +53,8 @@ export function render_box_graph(container, boxes, weights, adjacency) {
     }
     const box_ids = boxes.map(box => box.id);
     const title_by_id = new Map(boxes.map(box => [box.id, box.title]));
-    const { entry, nodes: graph_nodes } = build_graph(box_ids, weights, adjacency);
-    const access_scores = dijkstra(entry);
+    const { entry, nodes: graph_nodes } = build_graph(box_ids, adjacency);
+    const access_scores = compute_costs(entry, weights);
     const all_nodes_set = new Set(box_ids);
     for (const { v, u } of adjacency) {
         if (box_ids.includes(v))
@@ -140,8 +140,8 @@ export function render_weights_table(container, boxes, weights, adjacency) {
     if (boxes.length === 0)
         return;
     const box_ids = boxes.map(box => box.id);
-    const { entry, nodes: graph_nodes } = build_graph(box_ids, weights, adjacency);
-    const access_scores = dijkstra(entry);
+    const { entry, nodes: graph_nodes } = build_graph(box_ids, adjacency);
+    const access_scores = compute_costs(entry, weights);
     const sorted_boxes = [...boxes].sort((a, b) => a.title.localeCompare(b.title));
     const table = document.createElement("table");
     table.className = "data-table";

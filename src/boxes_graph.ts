@@ -2,7 +2,7 @@ import { empty_container, get_element } from "./dom_utils.js";
 import { get_db_manager, get_boxes_list } from "./index.js";
 import { renderPattern } from "./vocab.js";
 import type { Box } from "./types.js";
-import { dijkstra, build_graph, detect_cycle, type AdjacencyList, type Node } from "./graph_utils.js";
+import { compute_costs, build_graph, detect_cycle, type AdjacencyList, type Node } from "./graph_utils.js";
 
 declare const vis: any;
 
@@ -14,7 +14,7 @@ async function add_edge(this: { adjacency: AdjacencyList, boxes: Box[], weights:
 
     const box_ids = this.boxes.map(box => box.id);
     const staged = [...this.adjacency, { v, u }];
-    const { nodes } = build_graph(box_ids, this.weights, staged);
+    const { nodes } = build_graph(box_ids, staged);
     const labels = new Map<Node<number>, number>(Array.from(nodes.values(), node => [node, 0]));
     const start_node = nodes.get(v);
     const has_cycle = start_node !== undefined && detect_cycle(labels, start_node);
@@ -70,8 +70,8 @@ export function render_box_graph(
     const box_ids = boxes.map(box => box.id!);
     const title_by_id = new Map<number, string>(boxes.map(box => [box.id!, box.title]));
 
-    const { entry, nodes: graph_nodes } = build_graph(box_ids, weights, adjacency);
-    const access_scores = dijkstra(entry);
+    const { entry, nodes: graph_nodes } = build_graph(box_ids, adjacency);
+    const access_scores = compute_costs(entry, weights);
 
     const all_nodes_set = new Set<number>(box_ids);
     for (const { v, u } of adjacency) {
@@ -168,8 +168,8 @@ export function render_weights_table(
     if (boxes.length === 0) return;
 
     const box_ids = boxes.map(box => box.id!);
-    const { entry, nodes: graph_nodes } = build_graph(box_ids, weights, adjacency);
-    const access_scores = dijkstra(entry);
+    const { entry, nodes: graph_nodes } = build_graph(box_ids, adjacency);
+    const access_scores = compute_costs(entry, weights);
 
     const sorted_boxes = [...boxes].sort((a, b) => a.title.localeCompare(b.title));
 

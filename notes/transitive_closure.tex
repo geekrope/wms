@@ -1,0 +1,51 @@
+\section{Graph transitive closure}
+In the following chapter we consider the problem of finding the transitive closure (the list of accesible nodes) for Directed Acyclic Graph (DAG).
+\begin{algorithm}[htp!]
+    \caption{Topological sort for DAG} \label{alg:topological sort}
+    \KwData{$G = (V, E)$ -- DAG, $|V| = n < \infty$, $v$ -- starting node, $\text{visited} \gets \{\}$}
+    \KwResult{$\ell$ -- the order of topological sort}
+    add $v$ to $\text{visited}$\;
+    \For{$u \in V: (v, u) \in E$}
+    {
+        \If{$u \notin \text{visited}$}
+        {
+            topological\_sort(G, u, visited)\;
+        }
+    }
+    add $v$ to $\ell$\;
+    \Return $\ell_n, ..., \ell_1$
+\end{algorithm}
+\begin{proof}[Intuition for Algorithm~\ref{alg:topological sort}]
+    By definition of the topological sort we must have that for each edge $v\to u \in E$ the vertex $v$ must come before $u$. This is the immediate result of the algorithm construction since for each vertex we first run the topological sort from all of its children meaning that we add them before the vertex $v$. Since we maintain the list of the visited nodes we have that each node is visited at most ones, which also implies that the algorithm converges as the number of vertices is finite
+\end{proof}
+\begin{lemma} \label{lem:transitive closure recursive}
+    Given a DAG $G = (E, V)$ we have that:
+    \[R(v) = \bigcup_{u \in V:(v, u) \in E} R(u) \cup \{v\}\]
+    where $R(v)$ denotes the set of nodes accesible from $v$
+\end{lemma}
+\begin{proof}[Intuition for Lemma~\ref{lem:transitive closure recursive}] \hfill
+    \begin{enumerate}[align = left]
+        \item[``$\supset$''] That part is trivial since we can go to any node $u$ with the direct edge from $v$ or stay in $v$ and then to any node within $R(u)$
+        \item[``$\subset$''] Suppose the node $u$ is reachable from $v$. Assume that $v \neq u$ (the case $v = u$ follows trivially). Let $v = w_0, w_1, ..., w_k = u$ denote the path from $v$ to $u$, i.e. $(w_i, w_{i+1}) \in E \; \forall i \in \{0, ..., k-1\}$. Truncating the path (as we assume $v \neq u$ meaning that $k \geq 1$) to $w_1, ..., w_k$ we get that $u = w_k \in R(w_1)$, which implies:
+              \[u \in R(w_1) \subset \bigcup_{w \in V:(v, w) \in E} R(w)\]
+    \end{enumerate}
+\end{proof}
+\clearpage
+\begin{algorithm}[htp!] \label{alg:transitive closure}
+    \caption{Transitive closure}
+    \KwData{$G = (V, E) = (\{v_1, ..., v_n\}, E)$ -- DAG, $v_k \in R(v) \; \forall k \in \{1, ..., n\}$, $R(v_k) \gets \{v_k\} \; \forall k \in \{1, ..., n\}$}
+    \KwResult{$R(v_1), ..., R(v_n)$}
+    $\ell \gets \text{topological\_sort}(G, u)$\;
+    reverse $\ell$\;
+    \For {$u \in \ell$}
+    {
+        \For{$w \in V: (u, w) \in E$}
+        {
+            $R(u) \gets R(u) \cup R(w)$\; \tcc{Note that $w$ was processed before since in the reversed topological order $u$ comes \textit{after} $w$ for any edge $(u, w)$}
+        }
+    }
+    \Return{$R(v_1), ..., R(v_n)$}
+\end{algorithm}
+\begin{remark}
+    The Algorithm~\ref{alg:transitive closure} merely implements the Lemma~\ref{lem:transitive closure recursive}
+\end{remark}

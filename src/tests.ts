@@ -3,8 +3,8 @@ import { DatabaseManager } from "./main.js";
 import { SqlJsDriver } from "./db_driver.js";
 import type { IDatabaseDriver, SqlParams, Constructor } from "./db_driver.js";
 import { DummyPersistenceAdapter } from "./persistence.js";
-import { dijkstra, detect_cycle, build_graph, ValueNode } from "./graph_utils.js";
-import type { Node } from "./graph_utils.js";
+import { compute_costs, detect_cycle, build_graph, ValueNode } from "./graph_utils.js";
+import type { Node, AdjacencyList } from "./graph_utils.js";
 import { Analytics } from "./analytics_utils.js";
 
 export const debug = true;
@@ -66,38 +66,57 @@ function init_labels<T>(nodes: Node<T>[]): Map<Node<T>, number> {
 }
 
 export const GraphTests = {
-    // --- 1. DIJKSTRA ---
-    testDijkstraFindsShortestPaths(assert: AssertFunc) {
-        const a = new ValueNode("A");
-        const b = new ValueNode("B");
-        const c = new ValueNode("C");
-        const d = new ValueNode("D");
+    // --- 1. TRANSITIVE CLOSURE / COST PROPAGATION ---
+    testComputeCostsSumsWeightOfAncestors(assert: AssertFunc) {
+        // A -> B -> C: whatever presses on C is everything above it (A and B)
+        const boxes = ["A", "B", "C"];
+        const weights = new Map([["A", 2], ["B", 5], ["C", 1]]);
+        const adjacency = [{ v: "A", u: "B" }, { v: "B", u: "C" }];
 
-        a.add_successor(b, 2);
-        a.add_successor(c, 5);
-        b.add_successor(c, 1);
-        b.add_successor(d, 10);
-        c.add_successor(d, 2);
+        const { entry, nodes } = build_graph(boxes, adjacency);
+        const costs = compute_costs(entry, weights);
 
-        const distances = dijkstra(a);
-
-        assert(distances.get(a) === 0, "Distance to the start node is 0");
-        assert(distances.get(b) === 2, "Shortest distance to B is 2");
-        assert(distances.get(c) === 3, "Shortest distance to C goes through B (2+1=3), not the direct edge (5)");
-        assert(distances.get(d) === 5, "Shortest distance to D goes through B and C (2+1+2=5), not directly through B (2+10=12)");
+        assert(costs.get(nodes.get("A")!) === 0, "Nothing sits above A, so its cost is 0");
+        assert(costs.get(nodes.get("B")!) === 2, "B is pressed only by A's weight (2)");
+        assert(costs.get(nodes.get("C")!) === 7, "C is pressed by both A and B (2+5=7)");
     },
 
-    testDijkstraExcludesUnreachableNodes(assert: AssertFunc) {
-        const a = new ValueNode("A");
-        const b = new ValueNode("B");
-        const isolated = new ValueNode("Isolated");
+    testComputeCostsExcludesOwnWeight(assert: AssertFunc) {
+        const boxes = ["A"];
+        const weights = new Map([["A", 100]]);
+        const adjacency: AdjacencyList<string> = [];
 
-        a.add_successor(b, 1);
+        const { entry, nodes } = build_graph(boxes, adjacency);
+        const costs = compute_costs(entry, weights);
 
-        const distances = dijkstra(a);
+        assert(costs.get(nodes.get("A")!) === 0, "A's own weight never counts as pressing on itself");
+    },
 
-        assert(distances.has(b), "Reachable node is included in the result");
-        assert(!distances.has(isolated), "Node with no incoming path from start is excluded");
+    testComputeCostsHandlesDiamondWithoutDoubleCounting(assert: AssertFunc) {
+        // A -> B, A -> C, B -> D, C -> D: D is reachable from A via two paths,
+        // but A's weight should still be counted only once.
+        const boxes = ["A", "B", "C", "D"];
+        const weights = new Map([["A", 3], ["B", 4], ["C", 5], ["D", 1]]);
+        const adjacency = [
+            { v: "A", u: "B" }, { v: "A", u: "C" },
+            { v: "B", u: "D" }, { v: "C", u: "D" }
+        ];
+
+        const { entry, nodes } = build_graph(boxes, adjacency);
+        const costs = compute_costs(entry, weights);
+
+        assert(costs.get(nodes.get("D")!) === 12, "A is only counted once despite two paths into D (3+4+5=12)");
+    },
+
+    testComputeCostsIgnoresUnreachableNodes(assert: AssertFunc) {
+        const boxes = ["A", "Isolated"];
+        const weights = new Map([["A", 10], ["Isolated", 999]]);
+        const adjacency: AdjacencyList<string> = [];
+
+        const { entry, nodes } = build_graph(boxes, adjacency);
+        const costs = compute_costs(entry, weights);
+
+        assert(costs.get(nodes.get("A")!) === 0, "A has no predecessors, so nothing presses on it");
     },
 
     // --- 2. CYCLE DETECTION ---
@@ -106,9 +125,9 @@ export const GraphTests = {
         const b = new ValueNode("B");
         const c = new ValueNode("C");
 
-        a.add_successor(b, 1);
-        b.add_successor(c, 1);
-        c.add_successor(a, 1);
+        a.add_successor(b);
+        b.add_successor(c);
+        c.add_successor(a);
 
         const labels = init_labels([a, b, c]);
 
@@ -121,9 +140,9 @@ export const GraphTests = {
         const c = new ValueNode("C");
         const d = new ValueNode("D");
 
-        a.add_successor(b, 1);
-        a.add_successor(c, 1);
-        b.add_successor(d, 1);
+        a.add_successor(b);
+        a.add_successor(c);
+        b.add_successor(d);
 
         const labels = init_labels([a, b, c, d]);
 
@@ -134,7 +153,7 @@ export const GraphTests = {
         const a = new ValueNode("A");
         const b = new ValueNode("B");
 
-        a.add_successor(b, 1);
+        a.add_successor(b);
 
         const labels = init_labels([a]); // "b" is intentionally left unlabeled
 
@@ -151,10 +170,9 @@ export const GraphTests = {
     // --- 3. GRAPH CONSTRUCTION ---
     testBuildGraphRoutesOrphansThroughEntry(assert: AssertFunc) {
         const boxes = ["A", "B", "C"];
-        const weights = new Map<string, number>();
         const adjacency = [{ v: "A", u: "B" }];
 
-        const { entry, nodes } = build_graph(boxes, weights, adjacency);
+        const { entry, nodes } = build_graph(boxes, adjacency);
 
         assert(nodes.size === 3, "All boxes get a node");
         assert(entry.successors.has(nodes.get("A")!), "A is never a target, so it's an orphan linked from entry");
@@ -162,35 +180,14 @@ export const GraphTests = {
         assert(!entry.successors.has(nodes.get("B")!), "B is targeted by an edge, so it's not an orphan");
     },
 
-    testBuildGraphAssignsSourceWeightToEdge(assert: AssertFunc) {
-        const boxes = ["A", "B"];
-        const weights = new Map([["A", 7]]);
-        const adjacency = [{ v: "A", u: "B" }];
-
-        const { nodes } = build_graph(boxes, weights, adjacency);
-
-        assert(nodes.get("A")!.successors.get(nodes.get("B")!) === 7, "Edge weight is taken from the source box's weight");
-    },
-
-    testBuildGraphDefaultsMissingWeightToZero(assert: AssertFunc) {
-        const boxes = ["A", "B"];
-        const weights = new Map<string, number>(); // no entry for "A"
-        const adjacency = [{ v: "A", u: "B" }];
-
-        const { nodes } = build_graph(boxes, weights, adjacency);
-
-        assert(nodes.get("A")!.successors.get(nodes.get("B")!) === 0, "A missing weight entry defaults to 0");
-    },
-
     testBuildGraphSkipsEdgesReferencingUnknownBoxes(assert: AssertFunc) {
         const boxes = ["A"];
-        const weights = new Map<string, number>();
         const adjacency = [{ v: "A", u: "Ghost" }, { v: "Ghost", u: "A" }];
 
         let result: ReturnType<typeof build_graph<string>> | undefined;
         let threw = false;
         try {
-            result = build_graph(boxes, weights, adjacency);
+            result = build_graph(boxes, adjacency);
         } catch {
             threw = true;
         }
@@ -205,14 +202,14 @@ export const GraphTests = {
 
         const { assert, getStats } = assertFactory();
 
-        this.testDijkstraFindsShortestPaths(assert);
-        this.testDijkstraExcludesUnreachableNodes(assert);
+        this.testComputeCostsSumsWeightOfAncestors(assert);
+        this.testComputeCostsExcludesOwnWeight(assert);
+        this.testComputeCostsHandlesDiamondWithoutDoubleCounting(assert);
+        this.testComputeCostsIgnoresUnreachableNodes(assert);
         this.testDetectCycleFindsCycle(assert);
         this.testDetectCycleAcceptsDAG(assert);
         this.testDetectCycleThrowsOnUnlabeledNeighbor(assert);
         this.testBuildGraphRoutesOrphansThroughEntry(assert);
-        this.testBuildGraphAssignsSourceWeightToEdge(assert);
-        this.testBuildGraphDefaultsMissingWeightToZero(assert);
         this.testBuildGraphSkipsEdgesReferencingUnknownBoxes(assert);
 
         const { passed, total } = getStats();
