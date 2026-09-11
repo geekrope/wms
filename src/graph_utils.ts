@@ -24,16 +24,18 @@ export class EntryNode<T> extends Node<T> {
 
 export type AdjacencyList<T = number> = { v: T, u: T }[];
 
-function topological_sort_aux<T>(entry: Node<T>, result: Node<T>[]) {
+function topological_sort_aux<T>(entry: Node<T>, result: Node<T>[], visited: Set<Node<T>>) {
+    if (visited.has(entry)) return;
+    visited.add(entry);
     for (const child of entry.successors) {
-        topological_sort_aux(child, result)
+        topological_sort_aux(child, result, visited)
     }
     result.push(entry);
 }
 
 function topological_sort<T>(entry: Node<T>) {
     const result: Node<T>[] = [];
-    topological_sort_aux(entry, result);
+    topological_sort_aux(entry, result, new Set<Node<T>>());
     return result.reverse();
 }
 

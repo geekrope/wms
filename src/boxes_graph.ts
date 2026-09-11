@@ -136,8 +136,7 @@ export function render_box_graph(
             }
         },
         physics: {
-            enabled: true,
-            solver: "forceAtlas2Based"
+            enabled: false
         },
         interaction: {
             hover: true,

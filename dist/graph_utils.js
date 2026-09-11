@@ -19,15 +19,18 @@ export class ValueNode extends Node {
 }
 export class EntryNode extends Node {
 }
-function topological_sort_aux(entry, result) {
+function topological_sort_aux(entry, result, visited) {
+    if (visited.has(entry))
+        return;
+    visited.add(entry);
     for (const child of entry.successors) {
-        topological_sort_aux(child, result);
+        topological_sort_aux(child, result, visited);
     }
     result.push(entry);
 }
 function topological_sort(entry) {
     const result = [];
-    topological_sort_aux(entry, result);
+    topological_sort_aux(entry, result, new Set());
     return result.reverse();
 }
 function transitive_closure(entry) {
