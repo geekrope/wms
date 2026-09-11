@@ -26,23 +26,51 @@ function topological_sort_aux(entry, result, visited) {
     for (const child of entry.successors) {
         topological_sort_aux(child, result, visited);
     }
-    result.push(entry);
+    result.push([result.length, entry]);
 }
 function topological_sort(entry) {
     const result = [];
     topological_sort_aux(entry, result, new Set());
     return result.reverse();
 }
+function union(a, b) {
+    let ptr1 = 0;
+    let ptr2 = 0;
+    let result = [];
+    while (ptr1 < a.length || ptr2 < b.length) {
+        if (ptr1 >= a.length) {
+            result.push(b[ptr2]);
+            ptr2++;
+        }
+        else if (ptr2 >= b.length) {
+            result.push(a[ptr1]);
+            ptr1++;
+        }
+        else {
+            if (a[ptr1][0] < b[ptr2][0]) {
+                result.push(a[ptr1]);
+                ptr1++;
+            }
+            else if (a[ptr1][0] > b[ptr2][0]) {
+                result.push(b[ptr2]);
+                ptr2++;
+            }
+            else {
+                result.push(a[ptr1]);
+                ptr1++;
+                ptr2++;
+            }
+        }
+    }
+    return result;
+}
 function transitive_closure(entry) {
     const closure = new Map();
     const order = topological_sort(entry);
-    for (const node of order) {
-        closure.set(node, new Set());
-        closure.get(node).add(node);
+    for (const [idx, node] of order) {
+        closure.set(node, [[idx, node]]);
         for (const pred of node.predecessors) {
-            for (const acc_node of closure.get(pred)) {
-                closure.get(node).add(acc_node);
-            }
+            closure.set(node, union(closure.get(node), closure.get(pred)));
         }
     }
     return closure;
@@ -52,7 +80,7 @@ export function compute_costs(entry, weights) {
     const costs = new Map();
     for (const [node, conn_list] of closure) {
         let cost = 0;
-        for (const conn of conn_list) {
+        for (const [_, conn] of conn_list) {
             if (conn === node)
                 continue; // only what's pressing on the node counts, not the node itself
             if (conn instanceof ValueNode) {

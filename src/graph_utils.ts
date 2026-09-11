@@ -24,54 +24,77 @@ export class EntryNode<T> extends Node<T> {
 
 export type AdjacencyList<T = number> = { v: T, u: T }[];
 
-function topological_sort_aux<T>(entry: Node<T>, result: Node<T>[], visited: Set<Node<T>>) {
+function topological_sort_aux<T>(entry: Node<T>, result: [number, Node<T>][], visited: Set<Node<T>>) {
     if (visited.has(entry)) return;
     visited.add(entry);
     for (const child of entry.successors) {
         topological_sort_aux(child, result, visited)
     }
-    result.push(entry);
+    result.push([result.length, entry]);
 }
 
 function topological_sort<T>(entry: Node<T>) {
-    const result: Node<T>[] = [];
+    const result: [number, Node<T>][] = [];
     topological_sort_aux(entry, result, new Set<Node<T>>());
     return result.reverse();
 }
 
-function transitive_closure<T>(entry: Node<T>)
-{
-    const closure: Map<Node<T>, Set<Node<T>>> = new Map();
+function union<T>(a: [number, T][], b: [number, T][]) {
+    let ptr1: number = 0;
+    let ptr2: number = 0;
+    let result: [number, T][] = [];
+
+    while (ptr1 < a.length || ptr2 < b.length) {
+        if (ptr1 >= a.length) {
+            result.push(b[ptr2]);
+            ptr2++;
+        }
+        else if (ptr2 >= b.length) {
+            result.push(a[ptr1]);
+            ptr1++;
+        }
+        else {
+            if (a[ptr1][0] < b[ptr2][0]) {
+                result.push(a[ptr1]);
+                ptr1++;
+            }
+            else if (a[ptr1][0] > b[ptr2][0]) {
+                result.push(b[ptr2]);
+                ptr2++;
+            }
+            else {
+                result.push(a[ptr1]);
+                ptr1++; ptr2++;
+            }
+        }
+    }
+
+    return result;
+}
+
+// same algorithm used in networkx library in python
+function transitive_closure<T>(entry: Node<T>) {
+    const closure: Map<Node<T>, [number, Node<T>][]> = new Map();
     const order = topological_sort(entry);
 
-    for(const node of order)
-    {
-        closure.set(node, new Set<Node<T>>())
-        closure.get(node)!.add(node);
-        for(const pred of node.predecessors)
-        {
-            for(const acc_node of closure.get(pred)!)
-            {
-                closure.get(node)!.add(acc_node);
-            }            
+    for (const [idx, node] of order) {
+        closure.set(node, [[idx, node]]);
+        for (const pred of node.predecessors) {
+            closure.set(node, union(closure.get(node)!, closure.get(pred)!));
         }
     }
 
     return closure;
 }
 
-export function compute_costs<T>(entry: Node<T>, weights: Map<T, number>): Map<Node<T>, number>
-{
+export function compute_costs<T>(entry: Node<T>, weights: Map<T, number>): Map<Node<T>, number> {
     const closure = transitive_closure(entry);
     const costs: Map<Node<T>, number> = new Map();
-    for(const [node, conn_list] of closure)
-    {
+    for (const [node, conn_list] of closure) {
         let cost = 0;
-        for(const conn of conn_list)
-        {
-            if(conn === node) continue; // only what's pressing on the node counts, not the node itself
-            if(conn instanceof ValueNode)
-            {
+        for (const [_, conn] of conn_list) {
+            if (conn === node) continue; // only what's pressing on the node counts, not the node itself
+            if (conn instanceof ValueNode) {
                 cost += weights.get(conn.value) ?? 0;
             }
         }
