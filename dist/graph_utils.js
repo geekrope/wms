@@ -1,3 +1,4 @@
+import { Bitset } from "./bitset.js";
 export class Node {
     successors = new Set();
     predecessors = new Set();
@@ -26,12 +27,12 @@ function topological_sort_aux(entry, result, visited) {
     for (const child of entry.successors) {
         topological_sort_aux(child, result, visited);
     }
-    result.push([result.length, entry]);
+    result.push(entry);
 }
 function topological_sort(entry) {
     const result = [];
     topological_sort_aux(entry, result, new Set());
-    return result.reverse();
+    return result.reverse().map((value, index) => [index, value]);
 }
 function union(a, b) {
     let ptr1 = 0;
@@ -64,13 +65,30 @@ function union(a, b) {
     }
     return result;
 }
-function transitive_closure(entry) {
+// same algorithm used in networkx library in python
+function transitive_closure(entry, union_method = "bitset") {
     const closure = new Map();
     const order = topological_sort(entry);
-    for (const [idx, node] of order) {
-        closure.set(node, [[idx, node]]);
-        for (const pred of node.predecessors) {
-            closure.set(node, union(closure.get(node), closure.get(pred)));
+    if (union_method == "two-pointer") {
+        for (const [idx, node] of order) {
+            closure.set(node, [[idx, node]]);
+            for (const pred of node.predecessors) {
+                closure.set(node, union(closure.get(node), closure.get(pred)));
+            }
+        }
+    }
+    else {
+        const closure_mask = new Map();
+        for (let idx = 0; idx < order.length; idx++) {
+            const node = order[idx][1];
+            closure_mask.set(node, new Bitset());
+            closure_mask.get(node).set_bit(idx);
+            for (const pred of node.predecessors) {
+                closure_mask.set(node, closure_mask.get(node).or(closure_mask.get(pred)));
+            }
+        }
+        for (const [key, mask] of closure_mask) {
+            closure.set(key, mask.apply(order));
         }
     }
     return closure;

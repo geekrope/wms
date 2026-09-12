@@ -1,3 +1,5 @@
+import { Bitset } from "./bitset.js";
+
 export abstract class Node<T> {
     readonly successors: Set<Node<T>> = new Set();
     readonly predecessors: Set<Node<T>> = new Set();
@@ -24,19 +26,19 @@ export class EntryNode<T> extends Node<T> {
 
 export type AdjacencyList<T = number> = { v: T, u: T }[];
 
-function topological_sort_aux<T>(entry: Node<T>, result: [number, Node<T>][], visited: Set<Node<T>>) {
+function topological_sort_aux<T>(entry: Node<T>, result: Node<T>[], visited: Set<Node<T>>) {
     if (visited.has(entry)) return;
     visited.add(entry);
     for (const child of entry.successors) {
         topological_sort_aux(child, result, visited)
     }
-    result.push([result.length, entry]);
+    result.push(entry);
 }
 
 function topological_sort<T>(entry: Node<T>) {
-    const result: [number, Node<T>][] = [];
+    const result: Node<T>[] = [];
     topological_sort_aux(entry, result, new Set<Node<T>>());
-    return result.reverse();
+    return result.reverse().map((value, index) => [index, value] as [number, Node<T>]);
 }
 
 function union<T>(a: [number, T][], b: [number, T][]) {
@@ -73,14 +75,30 @@ function union<T>(a: [number, T][], b: [number, T][]) {
 }
 
 // same algorithm used in networkx library in python
-function transitive_closure<T>(entry: Node<T>) {
+function transitive_closure<T>(entry: Node<T>, union_method: "two-pointer" | "bitset" = "bitset") {
     const closure: Map<Node<T>, [number, Node<T>][]> = new Map();
     const order = topological_sort(entry);
 
-    for (const [idx, node] of order) {
-        closure.set(node, [[idx, node]]);
-        for (const pred of node.predecessors) {
-            closure.set(node, union(closure.get(node)!, closure.get(pred)!));
+    if (union_method == "two-pointer") {
+        for (const [idx, node] of order) {
+            closure.set(node, [[idx, node]]);
+            for (const pred of node.predecessors) {
+                closure.set(node, union(closure.get(node)!, closure.get(pred)!));
+            }
+        }
+    }
+    else {
+        const closure_mask: Map<Node<T>, Bitset> = new Map();
+        for (let idx = 0; idx < order.length; idx++) {
+            const node = order[idx][1];
+            closure_mask.set(node, new Bitset());
+            closure_mask.get(node)!.set_bit(idx);
+            for (const pred of node.predecessors) {
+                closure_mask.set(node, closure_mask.get(node)!.or(closure_mask.get(pred)!));
+            }
+        }
+        for (const [key, mask] of closure_mask) {
+            closure.set(key, mask.apply(order));
         }
     }
 
