@@ -157,7 +157,7 @@
                         <button class="preset-chip dashboard-preset-btn" data-target="query"
                             data-sql="SELECT * FROM boxes ORDER BY id ASC;">Boxes</button>
                         <button class="preset-chip dashboard-preset-btn" data-target="query"
-                            data-sql="SELECT * FROM box_adjacency;">Adjacency</button>
+                            data-sql="SELECT v.title AS v, u.title AS u FROM box_adjacency JOIN boxes AS v ON v.id = v JOIN boxes AS u ON u.id = u;">Adjacency</button>
                         <button class="preset-chip dashboard-preset-btn" data-target="query"
                             data-sql="SELECT type, name, sql FROM sqlite_master WHERE type IN ('table', 'trigger');">Schema</button>
                     </div>

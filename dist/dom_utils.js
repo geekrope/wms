@@ -4,6 +4,37 @@ export function get_element(id) {
         throw new Error(`Element #${id} not found.`);
     return el;
 }
+let scroll_indicator = null;
+function get_scroll_indicator() {
+    if (!scroll_indicator) {
+        scroll_indicator = document.createElement("div");
+        scroll_indicator.className = "log-scroll-indicator";
+        scroll_indicator.textContent = "↓";
+        scroll_indicator.addEventListener("click", () => {
+            const target_id = scroll_indicator?.dataset["target"];
+            if (target_id) {
+                document.getElementById(target_id)?.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+        });
+        scroll_indicator.addEventListener("animationend", () => {
+            scroll_indicator?.classList.remove("log-scroll-indicator-visible");
+        });
+        document.body.appendChild(scroll_indicator);
+    }
+    return scroll_indicator;
+}
+function is_in_viewport(el) {
+    const rect = el.getBoundingClientRect();
+    const viewport_height = window.innerHeight || document.documentElement.clientHeight;
+    return rect.bottom > 0 && rect.top < viewport_height;
+}
+function flash_scroll_indicator(target) {
+    const indicator = get_scroll_indicator();
+    indicator.dataset["target"] = target.id;
+    indicator.classList.remove("log-scroll-indicator-visible");
+    void indicator.offsetWidth; // restart the fade animation
+    indicator.classList.add("log-scroll-indicator-visible");
+}
 export function add_log_entry(message, container_id, is_error = false) {
     const log_element = document.getElementById(container_id);
     if (!log_element)
@@ -15,6 +46,9 @@ export function add_log_entry(message, container_id, is_error = false) {
         entry.style.color = "red";
     log_element.appendChild(entry);
     log_element.scrollTop = log_element.scrollHeight;
+    if (!is_in_viewport(log_element)) {
+        flash_scroll_indicator(log_element);
+    }
 }
 export function empty_container() {
     const emptyContainer = document.createElement("div");

@@ -95,26 +95,4 @@ export class Analytics {
             (obj: any) => ({ date: new Date(`${obj.date}T00:00:00Z`), count: obj.count as number }),
             { ":begin": begin, ":end": end });
     }
-
-    // TODO: implement same groupping as above
-    public async get_category_timeline(category: string): Promise<TimelinePoint[]> {
-        const category_id = await this.resolve_category_id(category);
-
-        return await this.db_driver.query<TimelinePoint>(`
-        WITH diff AS (
-            SELECT add_date AS date, 1 AS delta FROM items
-            WHERE category_id = :category_id
-            UNION ALL
-            SELECT remove_date, -1 FROM items
-            WHERE category_id = :category_id AND remove_date IS NOT NULL
-        )
-        SELECT DISTINCT date, SUM(delta) OVER (
-            ORDER BY date ASC, delta DESC
-            RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-        ) AS count
-        FROM diff
-        ORDER BY date;`,
-            (obj: any) => ({ date: obj.date as number, count: obj.count as number }),
-            { ":category_id": category_id });
-    }
 }

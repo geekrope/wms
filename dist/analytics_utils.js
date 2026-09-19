@@ -80,23 +80,5 @@ export class Analytics {
             GROUP BY T.date
             ORDER BY T.date;`, (obj) => ({ date: new Date(`${obj.date}T00:00:00Z`), count: obj.count }), { ":begin": begin, ":end": end });
     }
-    // TODO: implement same groupping as above
-    async get_category_timeline(category) {
-        const category_id = await this.resolve_category_id(category);
-        return await this.db_driver.query(`
-        WITH diff AS (
-            SELECT add_date AS date, 1 AS delta FROM items
-            WHERE category_id = :category_id
-            UNION ALL
-            SELECT remove_date, -1 FROM items
-            WHERE category_id = :category_id AND remove_date IS NOT NULL
-        )
-        SELECT DISTINCT date, SUM(delta) OVER (
-            ORDER BY date ASC, delta DESC
-            RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-        ) AS count
-        FROM diff
-        ORDER BY date;`, (obj) => ({ date: obj.date, count: obj.count }), { ":category_id": category_id });
-    }
 }
 //# sourceMappingURL=analytics_utils.js.map

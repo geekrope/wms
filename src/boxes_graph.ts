@@ -73,13 +73,7 @@ export function render_box_graph(
     const { entry, nodes: graph_nodes } = build_graph(box_ids, adjacency);
     const access_scores = compute_costs(entry, weights);
 
-    const all_nodes_set = new Set<number>(box_ids);
-    for (const { v, u } of adjacency) {
-        if (box_ids.includes(v)) all_nodes_set.add(v);
-        if (box_ids.includes(u)) all_nodes_set.add(u);
-    }
-
-    const nodes = Array.from(all_nodes_set).map(id => {
+    const nodes: any[] = box_ids.map(id => {
         const weight = weights.get(id) ?? 0;
         const box_node = graph_nodes.get(id);
         const access_cost = (box_node && access_scores.get(box_node)) ?? 0;
@@ -112,6 +106,7 @@ export function render_box_graph(
     });
 
     const edges: { from: number, to: number, label?: string, arrows: string, color?: any }[] = [];
+    const all_nodes_set = new Set<number>(box_ids);
     for (const { v, u } of adjacency) {
         if (all_nodes_set.has(v) && all_nodes_set.has(u)) {
             edges.push({
@@ -131,12 +126,25 @@ export function render_box_graph(
     const options = {
         layout: {
             hierarchical: {
-                direction: "UD",
-                sortMethod: "directed"
+                enabled: true,
+                sortMethod: "directed",
             }
         },
         physics: {
-            enabled: false
+            enabled: true,
+            hierarchicalRepulsion: {
+                nodeDistance: 150
+            },
+            stabilization: {
+                iterations: 200
+            }
+        },
+        edges: {
+            smooth: {
+                type: "cubicBezier",
+                forceDirection: "vertical",
+                roundness: 0.5
+            }
         },
         interaction: {
             hover: true,
@@ -213,7 +221,7 @@ export function render_weights_table(
         } else {
             const left_space = box.max_load - total_weight;
             const sign = left_space >= 0 ? "+" : "";
-            td_max_load.textContent = `${box.max_load} г (${sign}${left_space} г)`;
+            td_max_load.textContent = renderPattern("weight", { weight: box.max_load }) + ` (${renderPattern("weight", { weight: `${sign}${left_space}` })})`;
             td_max_load.className = left_space >= 0 ? "left-space-positive" : "left-space-negative";
         }
 
@@ -222,7 +230,7 @@ export function render_weights_table(
         const cost = (box_node && access_scores.get(box_node)) ?? 0;
         const badge = document.createElement("span");
         badge.className = `badge-cost ${cost === 0 ? "direct" : "blocked"}`;
-        badge.textContent = cost === 0 ? renderPattern("direct_access") : `${cost} г`;
+        badge.textContent = cost === 0 ? renderPattern("direct_access") : renderPattern("weight", { weight: cost });
         td_cost.appendChild(badge);
 
         tr.appendChild(td_box);

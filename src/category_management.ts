@@ -1,5 +1,5 @@
 import { add_log_entry, get_element, DynamicForm } from "./dom_utils.js";
-import { get_db_manager, reload_categories, get_categories_list } from "./index.js";
+import { get_db_manager, reload_categories } from "./index.js";
 import type { Category } from "./types.js";
 import { renderPattern, repr } from "./vocab.js";
 
@@ -18,8 +18,6 @@ async function add_category() {
     };
 
     try {
-        if (get_categories_list().some(c => c.title === category.title)) throw new Error("Category already exists");
-
         await manager.add_categories(category);
         category_form.reset();
         await refresh_category_management();

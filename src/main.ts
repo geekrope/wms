@@ -3,7 +3,7 @@ import { Item } from "./types.js";
 import { type Category, type Box } from "./types.js";
 import { type AdjacencyList } from "./graph_utils.js";
 
-//TODO: think if we want to throw an error if user is trying to abuse by adding a category that already exists to change its properties.
+//TODO: add hard delete for items for example for erroneous additions (wrong date)
 
 export class DatabaseManager {
     constructor(private db_driver: IDatabaseDriver) { }
@@ -71,6 +71,12 @@ export class DatabaseManager {
     }
 
     private async add_objects(table_name: string, objects: { title: string }[]): Promise<void> {
+        const titles = objects.map(obj => obj.title);
+        const active_titles = await this.get_ids(table_name, ...titles);
+        if (active_titles.size > 0) {
+            throw new Error(`The following ${table_name} already exist and are not deleted: ${Array.from(active_titles.keys()).join(", ")}.`);
+        }
+
         const properties = Object.keys(objects[0]);
         const id_loc = properties.indexOf("id");
         if (id_loc !== -1) properties.splice(id_loc, 1);
@@ -79,8 +85,8 @@ export class DatabaseManager {
         const set_clause = properties.map(prop => `${prop} = excluded.${prop}`).join(", ");
 
         await this.db_driver.run(
-            `INSERT INTO ${table_name} 
-            (${properties.join(", ")}) 
+            `INSERT INTO ${table_name}
+            (${properties.join(", ")})
             VALUES ${values_clause}
             ON CONFLICT (title) DO UPDATE
             SET deleted = 0,
@@ -236,7 +242,7 @@ export class DatabaseManager {
 
     public async get_box_weights(): Promise<{ box: string, total_weight: number }[]> {
         return await this.db_driver.query<{ box: string, total_weight: number }>(
-            `SELECT B.title as box, SUM(COALESCE(C.weight, 0)) AS total_weight
+            `SELECT B.title as box, ROUND(SUM(COALESCE(C.weight, 0))) AS total_weight
             FROM boxes AS B
             LEFT JOIN items AS I ON B.id = I.box_id AND I.remove_date IS NULL
             LEFT JOIN categories AS C ON I.category_id = C.id

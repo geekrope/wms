@@ -17,7 +17,7 @@ const navigate_action = new Map([
     ["category_management", refresh_category_management],
     ["backup", () => { }],
     ["dashboard", refresh_dashboard],
-    ["stats", () => refresh_analytics]
+    ["stats", refresh_analytics]
 ]);
 let db_manager = undefined;
 let categories = [];

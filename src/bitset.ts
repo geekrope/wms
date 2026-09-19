@@ -25,27 +25,13 @@ export class Bitset {
         return new Bitset(data);
     }
 
-    public mask() {
-        const mask: boolean[] = [];
-        for (let idx = 0; idx < this.data.length; idx++) {
-            let chunk = this.data[idx];
-            let bit = 0;
-            while (bit < 32) {
-                mask.push((chunk & 1) == 1);
-                chunk >>= 1;
-                bit++;
-            }
-        }
-        return mask;
-    }
-
     public apply<T>(array: T[]) {
         const result: T[] = [];
         let ptr = 0;
-        for (let idx = 0; idx < this.data.length; idx++) {
+        for (let idx = 0; idx < this.data.length && ptr < array.length; idx++) {
             let chunk = this.data[idx];
             let bit = 0;
-            while (bit < 32) {
+            while (bit < 32 && ptr < array.length) {
                 if ((chunk & 1) == 1) {
                     result.push(array[ptr]);
                 }

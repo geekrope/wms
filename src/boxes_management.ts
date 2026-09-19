@@ -1,5 +1,5 @@
 import { add_log_entry, empty_container, get_element, DynamicForm } from "./dom_utils.js";
-import { get_db_manager, reload_boxes, get_box_titles } from "./index.js";
+import { get_db_manager, reload_boxes } from "./index.js";
 import { renderPattern, repr } from "./vocab.js";
 import { Item, type Box } from "./types.js";
 import { refresh_boxes_graph, init_boxes_graph } from "./boxes_graph.js";
@@ -30,8 +30,28 @@ export class BoxElement {
         badge.className = "count-badge";
         badge.textContent = renderPattern("box_item_count", { count: item_elements.length });
 
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "btn-danger icon-btn icon-btn-delete";
+        deleteBtn.title = renderPattern("btn_delete");
+        deleteBtn.addEventListener("click", async () => {
+            try {
+                const manager = get_db_manager();
+                await manager.remove_box(this.box);
+                await refresh_boxes_management();
+                add_log_entry(renderPattern("log_delete_box", { title: this.box }), "boxesLog");
+            } catch (err) {
+                console.error("Failed to delete box:", err);
+                add_log_entry(renderPattern("log_delete_box_fail", { error: String(err) }), "boxesLog", true);
+            }
+        });
+
+        const actions = document.createElement("div");
+        actions.className = "box-header-actions";
+        actions.appendChild(deleteBtn);
+        actions.appendChild(badge);
+
         header.appendChild(title);
-        header.appendChild(badge);
+        header.appendChild(actions);
 
         this.items_list_container = document.createElement("div");
         this.items_list_container.className = "box-items-list";
@@ -300,8 +320,6 @@ export function init_boxes_management(): void {
             {
                 const title = String(values["boxTitle"] ?? "").trim();
                 const max_load = typeof values["maxLoad"] === "number" && !isNaN(values["maxLoad"]) ? values["maxLoad"] : null;
-
-                if (get_box_titles().includes(title)) throw new Error("Box already exists");
 
                 const box: Box = { id: undefined, title, max_load };
                 const manager = get_db_manager();

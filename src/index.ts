@@ -11,6 +11,8 @@ import { init_dashboard, refresh_dashboard } from "./dashboard.js";
 import { init_analytics, refresh_analytics } from "./analytics.js";
 import { type Category, type Box } from "./types.js";
 
+//TODO: consistent error logging
+
 declare global {
     interface Window {
         initSqlJs: (config?: any) => Promise<any>;
@@ -26,7 +28,7 @@ const navigate_action: Map<Page, () => void> = new Map([
     ["category_management", refresh_category_management],
     ["backup", () => { /* No refresh needed for backup */ }],
     ["dashboard", refresh_dashboard],
-    ["stats", () => refresh_analytics]
+    ["stats", refresh_analytics]
 ]);
 
 let db_manager: DatabaseManager | undefined = undefined;

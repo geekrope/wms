@@ -41,6 +41,8 @@ declare const LOCALES: {
         add_box_btn: string;
         log_add_box: string;
         log_add_box_fail: string;
+        log_delete_box: string;
+        log_delete_box_fail: string;
         page_title_restore: string;
         header_restore: string;
         page_title_dashboard: string;
@@ -114,6 +116,8 @@ declare const LOCALES: {
         add_box_btn: string;
         log_add_box: string;
         log_add_box_fail: string;
+        log_delete_box: string;
+        log_delete_box_fail: string;
         page_title_restore: string;
         header_restore: string;
         page_title_dashboard: string;

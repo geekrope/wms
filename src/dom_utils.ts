@@ -4,6 +4,42 @@ export function get_element<T extends HTMLElement>(id: string): T {
     return el as T;
 }
 
+let scroll_indicator: HTMLDivElement | null = null;
+
+function get_scroll_indicator(): HTMLDivElement {
+    if (!scroll_indicator) {
+        scroll_indicator = document.createElement("div");
+        scroll_indicator.className = "log-scroll-indicator";
+        scroll_indicator.textContent = "↓";
+        scroll_indicator.addEventListener("click", () => {
+            const target_id = scroll_indicator?.dataset["target"];
+            if (target_id) {
+                document.getElementById(target_id)?.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+        });
+        scroll_indicator.addEventListener("animationend", () => {
+            scroll_indicator?.classList.remove("log-scroll-indicator-visible");
+        });
+        document.body.appendChild(scroll_indicator);
+    }
+    return scroll_indicator;
+}
+
+function is_in_viewport(el: HTMLElement): boolean {
+    const rect = el.getBoundingClientRect();
+    const viewport_height = window.innerHeight || document.documentElement.clientHeight;
+    return rect.bottom > 0 && rect.top < viewport_height;
+}
+
+function flash_scroll_indicator(target: HTMLElement): void {
+    const indicator = get_scroll_indicator();
+    indicator.dataset["target"] = target.id;
+
+    indicator.classList.remove("log-scroll-indicator-visible");
+    void indicator.offsetWidth; // restart the fade animation
+    indicator.classList.add("log-scroll-indicator-visible");
+}
+
 export function add_log_entry(message: string, container_id: string, is_error: boolean = false) {
     const log_element = document.getElementById(container_id) as HTMLDivElement | null;
     if (!log_element) return;
@@ -15,6 +51,10 @@ export function add_log_entry(message: string, container_id: string, is_error: b
 
     log_element.appendChild(entry);
     log_element.scrollTop = log_element.scrollHeight;
+
+    if (!is_in_viewport(log_element)) {
+        flash_scroll_indicator(log_element);
+    }
 }
 
 export function empty_container(): HTMLDivElement {
