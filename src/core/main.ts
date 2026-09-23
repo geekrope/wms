@@ -1,7 +1,7 @@
 import type { IDatabaseDriver, SqlParams } from "./db_driver.js";
 import { Item } from "./types.js";
 import { type Category, type Box } from "./types.js";
-import { type AdjacencyList } from "./graph_utils.js";
+import { type AdjacencyList } from "../algorithms/graph_utils.js";
 
 //TODO: add hard delete for items for example for erroneous additions (wrong date)
 

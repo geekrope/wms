@@ -1,9 +1,9 @@
-import { add_log_entry, empty_container, get_element, DynamicForm } from "./dom_utils.js";
-import { get_db_manager, reload_boxes } from "./index.js";
-import { renderPattern, repr } from "./vocab.js";
-import { Item, type Box } from "./types.js";
-import { refresh_boxes_graph, init_boxes_graph } from "./boxes_graph.js";
-import { heapify, partial_heapsort } from "./heap.js";
+import { add_log_entry, empty_container, get_element, DynamicForm } from "../core/dom_utils.js";
+import { get_db_manager, reload_boxes } from "../core/index.js";
+import { renderPattern, repr } from "../core/vocab.js";
+import { Item, type Box } from "../core/types.js";
+import { refresh_boxes_graph, init_boxes_graph } from "../algorithms/boxes_graph.js";
+import { heapify, partial_heapsort } from "../algorithms/heap.js";
 
 //TODO: think if add/amend button should be added. same applies to categories management
 //TODO: resolve the issue: the watter boxes are not rigid and their layout is frequently modified

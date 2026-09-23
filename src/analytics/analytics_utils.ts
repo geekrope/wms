@@ -1,5 +1,5 @@
-import type { IDatabaseDriver } from "./db_driver.js";
-import type { DatabaseManager } from "./main.js";
+import type { IDatabaseDriver } from "../core/db_driver.js";
+import type { DatabaseManager } from "../core/main.js";
 
 export type TimelinePoint = { date: number, count: number };
 export type TimelineEvent = { date: number, delta: number };

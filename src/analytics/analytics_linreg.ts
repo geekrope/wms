@@ -1,8 +1,8 @@
 import { type TimelineEvent } from "./analytics_utils.js";
-import { locate_category } from "./index.js";
+import { locate_category } from "../core/index.js";
 import { stat_test, qq, mean_test } from "./linear_regression.js";
 import { get_analytics_object, analytics_category_input } from "./analytics.js";
-import { get_element } from "./dom_utils.js";
+import { get_element } from "../core/dom_utils.js";
 
 declare const Plotly: any;
 
@@ -25,7 +25,6 @@ let current_date_min = 0;
 let current_date_max = 0;
 
 type BarGeometry = { x: Date[], base: number[], height: number[], running_totals: number[] };
-
 type Regression = { x0: Date, y0: number, x1: Date, y1: number, x2: Date, y2: number, p_growth: number, p_decline: number, residuals: number[], sigma: number };
 
 // p_growth and p_decline are the two one-sided p-values of the same t-statistic, so they sum to 1:
@@ -242,7 +241,8 @@ function render_timeline_chart(container: HTMLElement, events: TimelineEvent[], 
         yaxis: { title: { text: "Count" } },
         shapes: [build_cutoff_shape(cutoff_x)],
         showlegend: true,
-        title: { text: `Category Timeline. ${regression ? `OLS Trend: ${get_trend(regression.p_growth, regression.p_decline)}` : ""}` },
+        title: { text: `Category Timeline` }, // ${regression ? `OLS Trend: ${get_trend(regression.p_growth, regression.p_decline)}` : ""}
+        // misleading read explanation in index.html
     });
 }
 

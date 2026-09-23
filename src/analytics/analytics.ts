@@ -1,9 +1,9 @@
 import { Analytics } from "./analytics_utils.js";
-import { type IDatabaseDriver } from "./db_driver.js";
-import { type DatabaseManager } from "./main.js";
-import { CategoryInput, get_element } from "./dom_utils.js";
-import { get_category_titles } from "./index.js";
-import { renderPattern } from "./vocab.js";
+import { type IDatabaseDriver } from "../core/db_driver.js";
+import { type DatabaseManager } from "../core/main.js";
+import { CategoryInput, get_element } from "../core/dom_utils.js";
+import { get_category_titles } from "../core/index.js";
+import { renderPattern } from "../core/vocab.js";
 import { refresh_regression_plot } from "./analytics_linreg.js";
 import { refresh_activity_plot } from "./analytics_activity.js";
 

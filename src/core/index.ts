@@ -1,14 +1,14 @@
 import { SqlJsDriver } from "./db_driver.js";
 import { DatabaseManager } from "./main.js";
 import { IndexedDbAdapter } from "./persistence.js";
-import { init_intake, refresh_intake } from "./intake.js";
-import { init_item_management, refresh_item_management } from "./item_management.js";
-import { init_backup } from "./backup.js";
+import { init_intake, refresh_intake } from "../pages/intake.js";
+import { init_item_management, refresh_item_management } from "../pages/item_management.js";
+import { init_backup } from "../pages/backup.js";
 import { get_element } from "./dom_utils.js";
-import { init_boxes_management, refresh_boxes_management } from "./boxes_management.js";
-import { init_category_management, refresh_category_management } from "./category_management.js";
-import { init_dashboard, refresh_dashboard } from "./dashboard.js";
-import { init_analytics, refresh_analytics } from "./analytics.js";
+import { init_boxes_management, refresh_boxes_management } from "../pages/boxes_management.js";
+import { init_category_management, refresh_category_management } from "../pages/category_management.js";
+import { init_dashboard, refresh_dashboard } from "../pages/dashboard.js";
+import { init_analytics, refresh_analytics } from "../analytics/analytics.js";
 import { type Category, type Box } from "./types.js";
 
 //TODO: consistent error logging

@@ -1,7 +1,7 @@
-import { add_log_entry, get_element, DynamicForm, CategoryInput } from "./dom_utils.js";
-import { get_db_manager, get_category_titles, get_box_titles } from "./index.js";
-import { renderPattern } from "./vocab.js";
-import { Item } from "./types.js";
+import { add_log_entry, get_element, DynamicForm, CategoryInput } from "../core/dom_utils.js";
+import { get_db_manager, get_category_titles, get_box_titles } from "../core/index.js";
+import { renderPattern } from "../core/vocab.js";
+import { Item } from "../core/types.js";
 
 let intake_form: DynamicForm | undefined = undefined;
 

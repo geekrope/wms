@@ -1,7 +1,7 @@
-import { add_log_entry, get_element, DynamicForm } from "./dom_utils.js";
-import { get_db_manager, reload_categories } from "./index.js";
-import type { Category } from "./types.js";
-import { renderPattern, repr } from "./vocab.js";
+import { add_log_entry, get_element, DynamicForm } from "../core/dom_utils.js";
+import { get_db_manager, reload_categories } from "../core/index.js";
+import type { Category } from "../core/types.js";
+import { renderPattern, repr } from "../core/vocab.js";
 
 let category_form: DynamicForm | undefined = undefined;
 

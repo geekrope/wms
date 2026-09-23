@@ -1,5 +1,5 @@
-import { get_element, add_log_entry } from "./dom_utils.js";
-import { get_db_manager, reload_categories } from "./index.js";
+import { get_element, add_log_entry } from "../core/dom_utils.js";
+import { get_db_manager, reload_categories } from "../core/index.js";
 
 declare const hljs: any;
 

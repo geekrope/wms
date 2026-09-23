@@ -1,7 +1,7 @@
-import { LocalFileAdapter, IndexedDbAdapter } from "./persistence.js";
-import type { IPersistenceAdapter } from "./persistence.js";
-import { add_log_entry, get_element } from "./dom_utils.js";
-import { renderPattern } from "./vocab.js";
+import { LocalFileAdapter, IndexedDbAdapter } from "../core/persistence.js";
+import type { IPersistenceAdapter } from "../core/persistence.js";
+import { add_log_entry, get_element } from "../core/dom_utils.js";
+import { renderPattern } from "../core/vocab.js";
 
 async function transfer(from: IPersistenceAdapter, to: IPersistenceAdapter): Promise<boolean> {
     const data = await from.load();

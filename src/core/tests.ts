@@ -3,9 +3,9 @@ import { DatabaseManager } from "./main.js";
 import { SqlJsDriver } from "./db_driver.js";
 import type { IDatabaseDriver, SqlParams, Constructor } from "./db_driver.js";
 import { DummyPersistenceAdapter } from "./persistence.js";
-import { compute_costs, detect_cycle, build_graph, ValueNode } from "./graph_utils.js";
-import type { Node, AdjacencyList } from "./graph_utils.js";
-import { Analytics } from "./analytics_utils.js";
+import { compute_costs, detect_cycle, build_graph, ValueNode } from "../algorithms/graph_utils.js";
+import type { Node, AdjacencyList } from "../algorithms/graph_utils.js";
+import { Analytics } from "../analytics/analytics_utils.js";
 
 export const debug = true;
 
@@ -253,17 +253,37 @@ export const DatabaseTests = {
         assert(categories[0]?.title === "Tuna", "Categories come back ordered alphabetically by title");
     },
 
-    async testAddCategoriesUpsertsOnConflict(assert: AssertFunc) {
+    async testAddCategoriesRejectsDuplicateActiveTitle(assert: AssertFunc) {
         const { manager } = await create_test_database();
         await manager.init_tables();
 
         await manager.add_categories({ id: undefined, title: "Meat", weight: 100 });
+
+        let threw = false;
+        try {
+            await manager.add_categories({ id: undefined, title: "Meat", weight: 250 });
+        } catch {
+            threw = true;
+        }
+
+        assert(threw, "Adding a title that is already active throws instead of silently overwriting it");
+
+        const categories = await manager.get_categories();
+        assert(categories.length === 1 && categories[0]?.weight === 100, "The existing active category is left untouched");
+    },
+
+    async testAddCategoriesRevivesSoftDeletedTitleOnConflict(assert: AssertFunc) {
+        const { manager } = await create_test_database();
+        await manager.init_tables();
+
+        await manager.add_categories({ id: undefined, title: "Meat", weight: 100 });
+        await manager.remove_category("Meat");
         await manager.add_categories({ id: undefined, title: "Meat", weight: 250 });
 
         const categories = await manager.get_categories();
 
-        assert(categories.length === 1, "Re-adding the same title doesn't create a duplicate row");
-        assert(categories[0]?.weight === 250, "Re-adding the same title updates its weight");
+        assert(categories.length === 1, "Re-adding a soft-deleted title doesn't create a duplicate row");
+        assert(categories[0]?.weight === 250, "Re-adding a soft-deleted title revives it with the new weight");
     },
 
     async testRemoveCategoryBlockedByActiveItems(assert: AssertFunc) {
@@ -476,7 +496,8 @@ export const DatabaseTests = {
 
         await this.testInitTables(assert);
         await this.testAddAndGetCategories(assert);
-        await this.testAddCategoriesUpsertsOnConflict(assert);
+        await this.testAddCategoriesRejectsDuplicateActiveTitle(assert);
+        await this.testAddCategoriesRevivesSoftDeletedTitleOnConflict(assert);
         await this.testRemoveCategoryBlockedByActiveItems(assert);
         await this.testRemoveCategorySucceedsAfterItemRemoved(assert);
         await this.testAddItemsRejectsUnknownCategory(assert);

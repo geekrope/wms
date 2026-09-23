@@ -1,6 +1,8 @@
 declare const math: any;
 declare const Statistics: any;
 
+//TODO: migrate to another library, this one outputs 1.14 cdf for t=0.15 with df=44, which is abolute nonsense
+
 export function stat_test(X: number[][], y: number[][]) {
     const n = X.length;
     const d = X[0].length;
@@ -40,7 +42,7 @@ export function mean_test(x: number[]) {
     const t_stat = mean / std_err;
 
     const stats = new Statistics([], [], {});
-    const p_left = stats.studentsTCumulativeValue(t_stat, n - 1);
+    const p_left = Math.min(stats.studentsTCumulativeValue(t_stat, n - 1), 1);
     const p_right = 1 - p_left;
 
     return {

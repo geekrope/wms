@@ -235,7 +235,7 @@
                         \overline{\Delta})^2} / \sqrt{n}} \sim t_{n - 1}\]
                     </p>
                     <br />
-                    <p style="text-indent: 30px;">
+                    <p style="text-indent: 30px; margin-bottom: 10px;">
                         We perform both tests since the OLS method helps to assess the local behaviour and the
                         residuals within a short time frame tend to be less correlated.
                     </p>
@@ -275,11 +275,11 @@
     </div>
 
     <script type="module">
-        import { GraphTests, DatabaseTests, AnalyticsTests, debug } from './dist/tests.js';
-        import { renderPattern, localizeDOM } from './dist/vocab.js';
-        import { main, navigate_to, handle_navigation } from './dist/index.js';
+        import { GraphTests, DatabaseTests, AnalyticsTests, debug } from './dist/core/tests.js';
+        import { renderPattern, localizeDOM } from './dist/core/vocab.js';
+        import { main, navigate_to, handle_navigation } from './dist/core/index.js';
         import * as ModelView from './src/modules/model-viewer.js';
-        import { stat_test } from './dist/linear_regression.js';
+        import { stat_test } from './dist/analytics/linear_regression.js';
 
         window.addEventListener("pageshow", async (event) => {
             await main();

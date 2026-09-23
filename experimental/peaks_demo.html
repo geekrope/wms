@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Peaks & prominence demo</title>
     <script src="../src/modules/plotly.min.js"></script>
-    <link rel="stylesheet" href="vis_styles.css">
     <style>
         * {
             box-sizing: border-box;
@@ -147,7 +146,7 @@
     </div>
 
     <script type="module">
-        import { find_peaks } from '../dist/peaks.js';
+        import { find_peaks } from '../dist/algorithms/peaks.js';
 
         const seriesInput = document.getElementById('seriesInput');
         const lengthInput = document.getElementById('lengthInput');
@@ -175,10 +174,14 @@
             const arr = parseSeries();
             const peaks = find_peaks(arr);
 
+            // find_peaks now also treats the first/last element as a
+            // potential peak, so mirror that here to line up indices with peaks[]
             const peakIndices = [];
             const peakValues = [];
-            for (let i = 1; i < arr.length - 1; i++) {
-                if (arr[i] > arr[i - 1] && arr[i] > arr[i + 1]) {
+            for (let i = 0; i < arr.length; i++) {
+                const leftOk = i === 0 || arr[i] > arr[i - 1];
+                const rightOk = i === arr.length - 1 || arr[i] > arr[i + 1];
+                if (leftOk && rightOk) {
                     peakIndices.push(i);
                     peakValues.push(arr[i]);
                 }
@@ -205,10 +208,9 @@
 
             peaks.forEach((p, idx) => {
                 const i = peakIndices[idx];
-                const base = Math.max(p.left_base, p.right_base);
                 traces.push({
                     x: [i, i],
-                    y: [base, p.peak],
+                    y: [p.peak - p.prominence, p.peak],
                     type: 'scatter',
                     mode: 'lines',
                     line: { color: '#95a5a6', dash: 'dot', width: 1 },
@@ -225,12 +227,14 @@
             peaksTableBody.innerHTML = '';
             peaks.forEach((p, idx) => {
                 const tr = document.createElement('tr');
+                const leftVal = p.left_base !== -1 ? arr[p.left_base] : undefined;
+                const rightVal = p.right_base !== -1 ? arr[p.right_base] : undefined;
                 tr.innerHTML = `
                     <td>${idx}</td>
                     <td>${peakIndices[idx]}</td>
                     <td>${p.peak}</td>
-                    <td>${Number.isFinite(p.left_base) ? p.left_base : '−∞'}</td>
-                    <td>${Number.isFinite(p.right_base) ? p.right_base : '−∞'}</td>
+                    <td>${leftVal !== undefined ? `${leftVal} (idx ${p.left_base})` : '−∞'}</td>
+                    <td>${rightVal !== undefined ? `${rightVal} (idx ${p.right_base})` : '−∞'}</td>
                     <td>${Math.round(p.prominence * 100) / 100}</td>
                 `;
                 peaksTableBody.appendChild(tr);

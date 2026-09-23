@@ -1,7 +1,7 @@
-import { empty_container, get_element } from "./dom_utils.js";
-import { get_db_manager, get_boxes_list } from "./index.js";
-import { renderPattern } from "./vocab.js";
-import type { Box } from "./types.js";
+import { empty_container, get_element } from "../core/dom_utils.js";
+import { get_db_manager, get_boxes_list } from "../core/index.js";
+import { renderPattern } from "../core/vocab.js";
+import type { Box } from "../core/types.js";
 import { compute_costs, build_graph, detect_cycle, type AdjacencyList, type Node } from "./graph_utils.js";
 
 declare const vis: any;

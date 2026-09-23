@@ -1,6 +1,6 @@
 import { type ActivityCount } from "./analytics_utils.js";
 import { get_analytics_object } from "./analytics.js";
-import { get_element } from "./dom_utils.js";
+import { get_element } from "../core/dom_utils.js";
 
 const HEATMAP_CELL_SIZE = 11;
 const HEATMAP_CELL_GAP = 2;

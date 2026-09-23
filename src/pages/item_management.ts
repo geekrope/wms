@@ -1,9 +1,9 @@
-import { Item, item_less } from "./types.js";
-import { heapify, partial_heapsort } from "./heap.js";
-import { add_log_entry, get_element, CategoryInput, empty_container } from "./dom_utils.js";
-import { get_db_manager, get_category_titles, get_boxes_list, locate_category } from "./index.js";
-import { renderPattern, repr } from "./vocab.js";
-import { compute_costs, build_graph, type AdjacencyList } from "./graph_utils.js";
+import { Item, item_less } from "../core/types.js";
+import { heapify, partial_heapsort } from "../algorithms/heap.js";
+import { add_log_entry, get_element, CategoryInput, empty_container } from "../core/dom_utils.js";
+import { get_db_manager, get_category_titles, get_boxes_list, locate_category } from "../core/index.js";
+import { renderPattern, repr } from "../core/vocab.js";
+import { compute_costs, build_graph, type AdjacencyList } from "../algorithms/graph_utils.js";
 
 const page_size: number = 5;
 

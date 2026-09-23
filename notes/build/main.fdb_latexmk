@@ -1,10 +1,10 @@
 # Fdb version 4
-["pdflatex"] 1790120398.61181 "c:/Documents/python projects/wms/notes/main.tex" "build/main.pdf" "main" 1790120401.17202 0
+["pdflatex"] 1790202726.20005 "c:/Documents/python projects/wms/notes/main.tex" "build/main.pdf" "main" 1790202728.73833 0
   "bounds_comparison.pdf" 1785102544 118178 4adf2c328b4d293d21dca655fb2320a2 ""
   "box_muller.tex" 1786751570 7102 89f5fc3ea2075736bb7c32955802643b ""
-  "build/main.aux" 1790120400 5411 4a48f5368ae1c56c23942ce54be9afdc "pdflatex"
-  "build/main.out" 1790120400 1488 6207663c526bee1a4457f4c724bdb131 "pdflatex"
-  "build/main.toc" 1790120400 858 7683d341751044da32e4abea6cd2d34a "pdflatex"
+  "build/main.aux" 1790202728 5411 4a48f5368ae1c56c23942ce54be9afdc "pdflatex"
+  "build/main.out" 1790202728 1488 6207663c526bee1a4457f4c724bdb131 "pdflatex"
+  "build/main.toc" 1790202728 858 7683d341751044da32e4abea6cd2d34a "pdflatex"
   "c:/Documents/python projects/wms/notes/main.tex" 1790109650 1551 dec51db1e84863c75504dbda4e81c075 ""
   "c:/Users/nknwn/.texlive2025/texmf-var/fonts/tfm/lh/lh-t2a/labx0600.tfm" 1786654490 3328 53593f1a01a3d91a061bfab3b9495e9f ""
   "c:/Users/nknwn/.texlive2025/texmf-var/fonts/tfm/lh/lh-t2a/labx0800.tfm" 1786654489 3312 b8ab24c48b05dd87fb4dc8a3f4f2271a ""
@@ -234,7 +234,7 @@
   "linear_regression.tex" 1786821984 17269 7358de56585d5328388704aed8459f7f ""
   "main.tex" 1790109650 1551 dec51db1e84863c75504dbda4e81c075 ""
   "transitive_closure.tex" 1789132165 3161 400127168c08721d8fc977da9b35d4e9 ""
-  "valleys.tex" 1790120397 3567 dcca8e0a4c3be76bfb6b9c0c79ffc011 ""
+  "valleys.tex" 1790202725 3613 d62387f1cc258a3fef352ef1aef8d37d ""
   (generated)
   "build/main.aux"
   "build/main.log"
