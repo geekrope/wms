@@ -401,6 +401,11 @@ INPUT c:/texlive/2025/texmf-dist/tex/latex/cyrillic/t2acmtt.fd
 INPUT c:/texlive/2025/texmf-dist/tex/latex/cyrillic/t2acmtt.fd
 INPUT c:/Users/nknwn/.texlive2025/texmf-var/fonts/tfm/lh/lh-t2a/latt1200.tfm
 INPUT c:/Users/nknwn/.texlive2025/texmf-var/fonts/tfm/lh/lh-t2a/lait1200.tfm
+INPUT ./valleys.tex
+INPUT ./valleys.tex
+INPUT valleys.tex
+INPUT c:/Users/nknwn/.texlive2025/texmf-var/fonts/tfm/lh/lh-t2a/labx0800.tfm
+INPUT c:/Users/nknwn/.texlive2025/texmf-var/fonts/tfm/lh/lh-t2a/labx0600.tfm
 INPUT build/main.aux
 INPUT build/main.out
 INPUT build/main.out

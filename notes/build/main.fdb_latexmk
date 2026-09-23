@@ -1,11 +1,13 @@
 # Fdb version 4
-["pdflatex"] 1789132143.43478 "c:/Documents/python projects/wms/notes/main.tex" "build/main.pdf" "main" 1789132145.86235 0
+["pdflatex"] 1790120398.61181 "c:/Documents/python projects/wms/notes/main.tex" "build/main.pdf" "main" 1790120401.17202 0
   "bounds_comparison.pdf" 1785102544 118178 4adf2c328b4d293d21dca655fb2320a2 ""
   "box_muller.tex" 1786751570 7102 89f5fc3ea2075736bb7c32955802643b ""
-  "build/main.aux" 1789132145 5061 10832cd53780b71371f42f1efbbc4639 "pdflatex"
-  "build/main.out" 1789132145 1247 edea634a22c36a70af0c4a921bc94e8b "pdflatex"
-  "build/main.toc" 1789132145 764 df8c3435a5f40b548ccfaeb8ed829ad8 "pdflatex"
-  "c:/Documents/python projects/wms/notes/main.tex" 1789083913 1521 59a5f7e2f3169c466baf95dd42fddadd ""
+  "build/main.aux" 1790120400 5411 4a48f5368ae1c56c23942ce54be9afdc "pdflatex"
+  "build/main.out" 1790120400 1488 6207663c526bee1a4457f4c724bdb131 "pdflatex"
+  "build/main.toc" 1790120400 858 7683d341751044da32e4abea6cd2d34a "pdflatex"
+  "c:/Documents/python projects/wms/notes/main.tex" 1790109650 1551 dec51db1e84863c75504dbda4e81c075 ""
+  "c:/Users/nknwn/.texlive2025/texmf-var/fonts/tfm/lh/lh-t2a/labx0600.tfm" 1786654490 3328 53593f1a01a3d91a061bfab3b9495e9f ""
+  "c:/Users/nknwn/.texlive2025/texmf-var/fonts/tfm/lh/lh-t2a/labx0800.tfm" 1786654489 3312 b8ab24c48b05dd87fb4dc8a3f4f2271a ""
   "c:/Users/nknwn/.texlive2025/texmf-var/fonts/tfm/lh/lh-t2a/labx1200.tfm" 1777807074 3308 eee81981029f67083258db36df06e523 ""
   "c:/Users/nknwn/.texlive2025/texmf-var/fonts/tfm/lh/lh-t2a/labx1440.tfm" 1768345449 3304 6a543c07045572737981351171e0505e ""
   "c:/Users/nknwn/.texlive2025/texmf-var/fonts/tfm/lh/lh-t2a/labx1728.tfm" 1768345446 3312 d199be9bd555944e2403193d58a0256a ""
@@ -230,8 +232,9 @@
   "heap_asymptotics.tex" 1786822056 2859 f8c45236d1402c15d7a724dac20a5cb5 ""
   "hoeffding.pdf" 1785102540 117891 e639de0303e0bee99c96cac3bca93343 ""
   "linear_regression.tex" 1786821984 17269 7358de56585d5328388704aed8459f7f ""
-  "main.tex" 1789083913 1521 59a5f7e2f3169c466baf95dd42fddadd ""
-  "transitive_closure.tex" 1789132142 3161 400127168c08721d8fc977da9b35d4e9 ""
+  "main.tex" 1790109650 1551 dec51db1e84863c75504dbda4e81c075 ""
+  "transitive_closure.tex" 1789132165 3161 400127168c08721d8fc977da9b35d4e9 ""
+  "valleys.tex" 1790120397 3567 dcca8e0a4c3be76bfb6b9c0c79ffc011 ""
   (generated)
   "build/main.aux"
   "build/main.log"

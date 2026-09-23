@@ -5,6 +5,7 @@ import { Item } from "./types.js";
 import { refresh_boxes_graph, init_boxes_graph } from "./boxes_graph.js";
 import { heapify, partial_heapsort } from "./heap.js";
 //TODO: think if add/amend button should be added. same applies to categories management
+//TODO: resolve the issue: the watter boxes are not rigid and their layout is frequently modified
 export class BoxElement {
     box;
     box_weight;

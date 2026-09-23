@@ -1,0 +1,59 @@
+\section{Finding valleys using monotonic stack}
+Problem formulation:
+Given the sequence of number $x_1, ..., x_n \in \R$ for each of the element we want to find the following quantity:
+\begin{itemize}[align = left]
+    \item[``$\exists j < i: x_j > x_i$'':] $q = \min(x_{j+1}, ... x_{i-1})$, where $j$ is the last index satisfying the condition.
+    \item[``$\nexists j < i: x_j > x_i$'':] $q = \min \{x_1, ..., x_{i-1}\}$
+\end{itemize}
+
+We use the following algorithm:
+\begin{algorithm}[!htpb]
+    \caption{Finding valleys} \label{alg:find valleys}
+    \KwData{$x_1, ..., x_n \in \R$}
+    \KwResult{$q_1, ..., q_n \in \R \cup \{\infty\}$}
+    $st \gets \textbf{stack}()$\;
+    \For{$i \in \{1, ..., n\}$}
+    {
+        $q_i \gets \infty$\;
+
+        \While{$\text{len}(st) > 0$}
+        {
+            $top \gets st.top()$\;
+            $j \gets x_{top.index}$\;
+
+            \If {$x_j > x_i$}{
+                \textbf{break}\;
+            }
+
+            $q_i \gets \min\{q_i, top.value, x_j\}$\;
+            $st.pop()$\;
+        }
+
+        $st.push(\{i, q_i\})$\;
+    }
+\end{algorithm}
+\begin{proof}[Proof of correctness of Algortihm~\ref{alg:find valleys}] \hfill
+
+    We define $L(i) = \max \{j: j < i, x_j > x_i\}$ for all $i: (\exists j: j < i,  x_j > x_i)$. We want to prove inductively that after each iteration the stacks stores $(j_1, q_{j_1}), ... (j_m, q_{j_m})$, s.t. $j_i = L(j_{i + 1}) \; \forall i \in \{1, ..., m-1\}$ and $q_i$'s comply with the problem statement. 
+    \begin{enumerate}[align = left]
+        \item[$n = 1$:] If there is a single element then upon the first loop iteration $q_1$ will be initialized with $\infty$ since the stack is empty, so the while loop does not execute. This element is immediately added to the stack maintaining the invariant.
+        \item[$n \to n + 1$:] Assume that the inductive hypothesis holds for some $n \in \N$
+        \begin{itemize}
+            \item Suppose there exists an index $j < n+1$, s.t. $x_j > x_{n+1}$ and let $j = L(n+1)$, which is well-defined by the assumption above.
+            
+            Let $j_1 = n, j_2 = L(j_1), ..., j_m = j$. The element $j_1 = n$ is in the stack since it was added in the previous iteration. The elements $j_2, ..., j_{m - 1}$ are in the stack by the inductive hypothesis and the element $j$ is in the stack, since by the construction $x_j > x_l \; \forall l > j$, so there were no iteration in which $j$ was removed from the stack. Using the induction hypothesis we have that 
+            \[q_i = \min \{x_{L(j_i) + 1}, ..., x_{j_{i} - 1}\} = \min \{x_{j_{i + 1} + 1}, ..., x_{j_{i} - 1}\} \forall i \in \{1, ..., m-1\}\]
+            
+            Thus for the top element $j_i$ we update
+            \[q_{n+1} = \min\{q_{n+1}, top.value, x_{j_i}\}\]
+            where $top.value = q_{j_i} = \min \{x_{j_{i + 1} + 1}, ..., x_{j_{i} - 1}\}$, so:
+            \[q_{n+1} = \min\{q_{n+1}, x_{j_{i + 1} + 1}, ..., x_{j_{i} - 1}, x_{j_{i}}\}\]
+
+            Expanding this equation until the index $j$ we get:
+            \[q_{n+1} = \min\{x_{j + 1}, ..., x_{n}\}\] 
+
+            Moreover all the element until the index $j$ get erased, so $j = L(n+1)$ maintains the invariant.
+            \item If there exists no such $j < n+1$, that $x_j > x_{n+1}$. Then all the element in the stack get erased. Using the same telesopic argument we can prove that $q_i$ absorbs all the valleys that existed before until reaches the element for which $L$ is not defined.
+        \end{itemize}
+    \end{enumerate}
+\end{proof}
