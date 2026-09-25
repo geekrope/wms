@@ -1,7 +1,7 @@
 import { type TimelineEvent } from "./analytics_utils.js";
 import { locate_category } from "../core/index.js";
 import { stat_test, qq, mean_test } from "./linear_regression.js";
-import { get_analytics_object, analytics_category_input } from "./analytics.js";
+import { get_analytics_object, analytics_category_input } from "./analytics_engine.js";
 import { get_element } from "../core/dom_utils.js";
 
 declare const Plotly: any;

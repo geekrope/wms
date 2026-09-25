@@ -51,7 +51,7 @@ export function find_peaks(arr) {
             const right_base = right_bases[i];
             const highest_base = max_index(arr, left_base, right_base);
             const prominence = highest_base == -1 ? NaN : arr[i] - arr[highest_base];
-            peaks.push({ peak: arr[i], left_base, right_base, prominence });
+            peaks.push({ index: i, left_base, right_base, highest_base, prominence });
         }
     }
     return peaks;

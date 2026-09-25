@@ -1,7 +1,7 @@
 import {} from "./analytics_utils.js";
 import { locate_category } from "../core/index.js";
 import { stat_test, qq, mean_test } from "./linear_regression.js";
-import { get_analytics_object, analytics_category_input } from "./analytics.js";
+import { get_analytics_object, analytics_category_input } from "./analytics_engine.js";
 import { get_element } from "../core/dom_utils.js";
 const INCREASING_COLOR = "rgb(78, 159, 131)";
 const INCREASING_COLOR_MUTED = "rgba(78, 159, 131, 0.35)";

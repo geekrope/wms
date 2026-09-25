@@ -6,6 +6,7 @@ import { get_category_titles } from "../core/index.js";
 import { renderPattern } from "../core/vocab.js";
 import { refresh_regression_plot } from "./analytics_linreg.js";
 import { refresh_activity_plot } from "./analytics_activity.js";
+import { refresh_climate_plot } from "./analytics_climate.js";
 
 let analytics_object: Analytics | undefined = undefined;
 export let analytics_category_input: CategoryInput | undefined;
@@ -23,6 +24,9 @@ export async function refresh_analytics(): Promise<void> {
 
     const heatmap_container = get_element("analyticsHeatmapContainer");
     await refresh_activity_plot(heatmap_container);
+
+    const climate_container = get_element("analyticsClimateContainer");
+    await refresh_climate_plot(climate_container);
 }
 
 export async function init_analytics(db_driver: IDatabaseDriver, manager: DatabaseManager): Promise<void> {
@@ -42,6 +46,12 @@ export async function init_analytics(db_driver: IDatabaseDriver, manager: Databa
     const cutoff_slider = get_element<HTMLInputElement>("analyticsCutoffSlider");
     cutoff_slider.addEventListener("input", async () => {
         await refresh_regression_plot();
+    });
+
+    const smoothing_slider = get_element<HTMLInputElement>("analyticsSmoothingSlider");
+    smoothing_slider.addEventListener("input", async () => {
+        const climate_container = get_element("analyticsClimateContainer");
+        await refresh_climate_plot(climate_container);
     });
 
     await refresh_analytics();

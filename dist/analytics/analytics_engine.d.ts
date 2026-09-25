@@ -6,4 +6,4 @@ export declare let analytics_category_input: CategoryInput | undefined;
 export declare function get_analytics_object(): Analytics;
 export declare function refresh_analytics(): Promise<void>;
 export declare function init_analytics(db_driver: IDatabaseDriver, manager: DatabaseManager): Promise<void>;
-//# sourceMappingURL=analytics.d.ts.map
+//# sourceMappingURL=analytics_engine.d.ts.map

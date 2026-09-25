@@ -109,7 +109,8 @@
 <body>
     <div class="container">
         <h1>📈 Peaks & prominence demo</h1>
-        <p class="hint">Illustrate <code>find_peaks</code> from <code>src/peaks.ts</code>: O(n) peak computation with their prominences using monotonic stack.</p>
+        <p class="hint">Illustrate <code>find_peaks</code> from <code>src/peaks.ts</code>: O(n) peak computation with
+            their prominences using monotonic stack.</p>
 
         <div class="card">
             <div class="controls">
@@ -174,19 +175,6 @@
             const arr = parseSeries();
             const peaks = find_peaks(arr);
 
-            // find_peaks now also treats the first/last element as a
-            // potential peak, so mirror that here to line up indices with peaks[]
-            const peakIndices = [];
-            const peakValues = [];
-            for (let i = 0; i < arr.length; i++) {
-                const leftOk = i === 0 || arr[i] > arr[i - 1];
-                const rightOk = i === arr.length - 1 || arr[i] > arr[i + 1];
-                if (leftOk && rightOk) {
-                    peakIndices.push(i);
-                    peakValues.push(arr[i]);
-                }
-            }
-
             const traces = [
                 {
                     x: arr.map((_, i) => i),
@@ -197,8 +185,12 @@
                     line: { color: '#3498db' }
                 },
                 {
-                    x: peakIndices,
-                    y: peakValues,
+                    x: peaks.map((peak) => {
+                        return peak.index;
+                    }),
+                    y: peaks.map((peak) => {
+                        return arr[peak.index];
+                    }),
                     type: 'scatter',
                     mode: 'markers',
                     name: 'peaks',
@@ -209,8 +201,8 @@
             peaks.forEach((p, idx) => {
                 const i = peakIndices[idx];
                 traces.push({
-                    x: [i, i],
-                    y: [p.peak - p.prominence, p.peak],
+                    x: [p.index, p.index],
+                    y: [arr[p.index] - p.prominence, arr[p.index]],
                     type: 'scatter',
                     mode: 'lines',
                     line: { color: '#95a5a6', dash: 'dot', width: 1 },
@@ -231,8 +223,8 @@
                 const rightVal = p.right_base !== -1 ? arr[p.right_base] : undefined;
                 tr.innerHTML = `
                     <td>${idx}</td>
-                    <td>${peakIndices[idx]}</td>
-                    <td>${p.peak}</td>
+                    <td>${p.index}</td>
+                    <td>${arr[p.index]}</td>
                     <td>${leftVal !== undefined ? `${leftVal} (idx ${p.left_base})` : '−∞'}</td>
                     <td>${rightVal !== undefined ? `${rightVal} (idx ${p.right_base})` : '−∞'}</td>
                     <td>${Math.round(p.prominence * 100) / 100}</td>

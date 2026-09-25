@@ -255,6 +255,17 @@
                 </div>
 
                 <div class="card">
+                    <h2>🌡️ Climate</h2>
+                    <div class="form-group">
+                        <label for="analyticsSmoothingSlider">smoothing</label>
+                        <input type="range" id="analyticsSmoothingSlider" min="0.05" max="1" value="0.5" step="0.05">
+                    </div>
+                    <div id="analyticsClimateContainer" style="width: 100%; max-height: 400px;"></div>
+                    <hr class="section-divider">
+                    <div id="analyticsPeaksTableContainer"></div>
+                </div>
+
+                <div class="card">
                     <h2>🗓️ Activity</h2>
                     <div style="margin-bottom: 10px;">🔥Streak: <span id="streakLabel"></span>, Max: <span
                             id="maxStreakLabel"></span></div>

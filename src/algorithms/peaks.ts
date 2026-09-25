@@ -1,3 +1,5 @@
+export type Peak = { index: number, left_base: number, right_base: number, highest_base: number, prominence: number };
+
 function min_index(collection: number[], ...indices: number[]) {
     if (indices.length == 0) return -1;
     let min = -1;
@@ -47,7 +49,7 @@ function find_bases(arr: number[]) {
 export function find_peaks(arr: number[]) {
     const left_bases = find_bases(arr);
     const right_bases = find_bases([...arr].reverse()).reverse().map((el) => { return el == -1 ? -1 : arr.length - 1 - el; });
-    const peaks: { peak: number, left_base: number, right_base: number, prominence: number }[] = [];
+    const peaks: Peak[] = [];
 
     for (let i = 0; i < arr.length; i++) {
         if ((i == 0 || arr[i] > arr[i - 1]) && (i == arr.length - 1 || arr[i] > arr[i + 1])) {
@@ -56,7 +58,7 @@ export function find_peaks(arr: number[]) {
 
             const highest_base = max_index(arr, left_base, right_base);
             const prominence = highest_base == -1 ? NaN : arr[i] - arr[highest_base];
-            peaks.push({ peak: arr[i], left_base, right_base, prominence });
+            peaks.push({ index: i, left_base, right_base, highest_base, prominence });
         }
     }
     return peaks;

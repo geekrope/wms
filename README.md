@@ -13,8 +13,9 @@ The project implements a lightweight Warehouse Management System via an SQLite d
 
 ## Key Algorithms & Logic
 * **Data Pagination:** Heap data structure for pagination
-* **Graph Traversal & Layout:** Transitive closure via topological sort and bitset union and 3 color DFS cycle finding algorithm for box layout
-* **Statistical Inference:** t-stat for conducting the statistical test for non-zero mean presence
+* **Graph Traversal & Layout:** Transitive closure via topological sort and bitset union and 3 color DFS cycle finding algorithm for box layout [[1]](https://geekrope.github.io/wms/notes/build/main.pdf#section.5)
+* **Statistical Inference:** t-stat for conducting the statistical test for non-zero mean presence [[2]](https://geekrope.github.io/wms/notes/build/main.pdf#section.2)
+* **DSP:** First order Exponential Moving average with forward and backward filtration. Peak finding algorithm via monotonic stack [[3]](https://geekrope.github.io/wms/notes/build/main.pdf#section.6)
 
 **Live Demo:** [https://geekrope.github.io/wms/](https://geekrope.github.io/wms/)
 

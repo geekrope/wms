@@ -6,6 +6,7 @@ import { get_category_titles } from "../core/index.js";
 import { renderPattern } from "../core/vocab.js";
 import { refresh_regression_plot } from "./analytics_linreg.js";
 import { refresh_activity_plot } from "./analytics_activity.js";
+import { refresh_climate_plot } from "./analytics_climate.js";
 let analytics_object = undefined;
 export let analytics_category_input;
 export function get_analytics_object() {
@@ -20,6 +21,8 @@ export async function refresh_analytics() {
     await refresh_regression_plot();
     const heatmap_container = get_element("analyticsHeatmapContainer");
     await refresh_activity_plot(heatmap_container);
+    const climate_container = get_element("analyticsClimateContainer");
+    await refresh_climate_plot(climate_container);
 }
 export async function init_analytics(db_driver, manager) {
     analytics_object = new Analytics(db_driver, manager);
@@ -32,9 +35,14 @@ export async function init_analytics(db_driver, manager) {
     cutoff_slider.addEventListener("input", async () => {
         await refresh_regression_plot();
     });
+    const smoothing_slider = get_element("analyticsSmoothingSlider");
+    smoothing_slider.addEventListener("input", async () => {
+        const climate_container = get_element("analyticsClimateContainer");
+        await refresh_climate_plot(climate_container);
+    });
     await refresh_analytics();
     window.onresize = async () => {
         await refresh_analytics();
     };
 }
-//# sourceMappingURL=analytics.js.map
+//# sourceMappingURL=analytics_engine.js.map

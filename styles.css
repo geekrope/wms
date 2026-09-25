@@ -136,7 +136,8 @@ label {
     letter-spacing: 0.5px;
 }
 
-label[for="analyticsCutoffSlider"] {
+label[for="analyticsCutoffSlider"],
+label[for="analyticsSmoothingSlider"] {
     text-align: center;
 }
 
@@ -828,4 +829,30 @@ hr.section-divider {
     border: none;
     border-top: 1px solid #ecf0f1;
     margin: 20px 0;
+}
+
+.peaks-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.peaks-table th,
+.peaks-table td {
+    padding: 8px 12px;
+    text-align: right;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+.peaks-table th:first-child,
+.peaks-table td:first-child {
+    text-align: left;
+}
+
+.peaks-table th {
+    font-weight: 600;
+    color: #2c3e50;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
 }
