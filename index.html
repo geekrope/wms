@@ -258,7 +258,20 @@
                     <h2>🌡️ Climate</h2>
                     <div class="form-group">
                         <label for="analyticsSmoothingSlider">smoothing</label>
-                        <input type="range" id="analyticsSmoothingSlider" min="0.05" max="1" value="0.5" step="0.05">
+                        <input type="range" id="analyticsSmoothingSlider" min="0.05" max="0.95" value="0.5" step="0.05">
+                    </div>
+                    <div class="form-group" style="text-align: center;">
+                        <label for="analyticsProminenceSlider">min. prominence: <span id="analyticsProminenceValue">1.0</span> °C</label>
+                        <input type="range" id="analyticsProminenceSlider" min="0" max="5" value="1" step="0.1">
+                    </div>
+                    <div class="form-group" style="text-align: center;">
+                        <label>extremes</label>
+                        <div class="segmented-control">
+                            <input type="radio" name="analyticsExtreme" id="analyticsExtremeHighs" value="highs" checked>
+                            <label for="analyticsExtremeHighs">highs</label>
+                            <input type="radio" name="analyticsExtreme" id="analyticsExtremeLows" value="lows">
+                            <label for="analyticsExtremeLows">lows</label>
+                        </div>
                     </div>
                     <div id="analyticsClimateContainer" style="width: 100%; max-height: 400px;"></div>
                     <hr class="section-divider">
@@ -270,6 +283,11 @@
                     <div style="margin-bottom: 10px;">🔥Streak: <span id="streakLabel"></span>, Max: <span
                             id="maxStreakLabel"></span></div>
                     <div id="analyticsHeatmapContainer" style="width: 100%; max-height: 220px;"></div>
+                </div>
+
+                <div class="card">
+                    <h2>⏳ Expiration</h2>
+                    <div id="analyticsExpirationContainer" style="width: 100%; min-height: 600px;"></div>
                 </div>
 
                 <div class="card">

@@ -42,11 +42,11 @@ export async function handle_navigation() {
     const action = navigate_action.get(page);
     if (!action)
         throw new Error(`No action defined for page: ${page}`);
-    await action();
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll(`.nav-tab[data-page="${page}"]`).forEach(tab => tab.classList.add('active'));
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     get_element(page).classList.add('active');
+    await action();
 }
 export function get_db_manager() {
     if (!db_manager) {

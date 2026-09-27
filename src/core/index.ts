@@ -12,6 +12,7 @@ import { init_analytics, refresh_analytics } from "../analytics/analytics_engine
 import { type Category, type Box } from "./types.js";
 
 //TODO: consistent error logging
+//TODO: edit box names, category names and their properties
 
 declare global {
     interface Window {
@@ -58,13 +59,14 @@ export async function handle_navigation(): Promise<void> {
     const action = navigate_action.get(page);
 
     if (!action) throw new Error(`No action defined for page: ${page}`);
-    await action();    
 
     document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll(`.nav-tab[data-page="${page}"]`).forEach(tab => tab.classList.add('active'));   
+    document.querySelectorAll(`.nav-tab[data-page="${page}"]`).forEach(tab => tab.classList.add('active'));
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
 
     get_element<HTMLDivElement>(page).classList.add('active');
+
+    await action();
 }
 
 export function get_db_manager(): DatabaseManager {

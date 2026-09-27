@@ -5,6 +5,7 @@ export type TimelinePoint = { date: number, count: number };
 export type TimelineEvent = { date: number, delta: number };
 export type ActivityEvent = { date: number, delta: number };
 export type ActivityCount = { date: Date, count: number };
+export type RangeCount = { category: string, count: number };
 
 export class Analytics {
     constructor(private db_driver: IDatabaseDriver, private manager: DatabaseManager) { }
@@ -54,8 +55,8 @@ export class Analytics {
             )
             SELECT start, MAX(CAST(julianday(end) - julianday(start) AS INTEGER)) AS streak
             FROM intervals;`,
-            (obj: any) => { 
-                return {value: Number(obj.streak), start: new Date(obj.start)};
+            (obj: any) => {
+                return { value: Number(obj.streak), start: new Date(obj.start) };
             });
     }
 
@@ -94,5 +95,39 @@ export class Analytics {
             ORDER BY T.date;`,
             (obj: any) => ({ date: new Date(`${obj.date}T00:00:00Z`), count: obj.count as number }),
             { ":begin": begin, ":end": end });
+    }
+
+    public async get_counts(begin?: number, end?: number): Promise<RangeCount[]> {
+        let params: number[];
+        let where_clause: string;
+
+        if (begin !== undefined && end !== undefined) {
+            params = [begin, end];
+            where_clause = `I.expiration_date >= ? AND I.expiration_date < ?`;
+        }
+        else if (begin !== undefined) {
+            params = [begin];
+            where_clause = `I.expiration_date >= ?`;
+        }
+        else if (end !== undefined) {
+            params = [end];
+            where_clause = `I.expiration_date < ?`;
+        }
+        else {
+            params = [];
+            where_clause = `1`;
+        }
+
+        return await this.db_driver.query<{ category: string, count: number }>(
+            `SELECT C.title, SUM(I.remove_date IS NULL) AS count
+                 FROM items AS I 
+                JOIN categories AS C ON C.id = I.category_id
+                WHERE ${where_clause}
+                GROUP BY C.title
+                HAVING count > 0
+                ORDER BY count DESC;`,
+            (obj) => { return { category: obj.title as string, count: obj.count as number }; },
+            params
+        )
     }
 }

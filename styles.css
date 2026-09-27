@@ -126,6 +126,44 @@ h2 {
     margin-bottom: 20px;
 }
 
+.segmented-control {
+    display: inline-flex;
+    background: #ecf0f1;
+    border-radius: 8px;
+    padding: 4px;
+    gap: 4px;
+}
+
+.segmented-control input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.segmented-control label {
+    display: inline-block;
+    margin: 0;
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: normal;
+    color: #7f8c8d;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.segmented-control label:hover {
+    color: #3498db;
+}
+
+.segmented-control input[type="radio"]:checked + label {
+    background: #3498db;
+    color: white;
+    box-shadow: 0 2px 6px rgba(52, 152, 219, 0.35);
+}
+
 label {
     display: block;
     font-weight: 600;

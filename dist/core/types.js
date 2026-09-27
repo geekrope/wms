@@ -30,6 +30,6 @@ export function item_less(a, b) {
         return a.status > b.status;
     if (a.expiration_date != b.expiration_date)
         return a.expiration_date < b.expiration_date;
-    return true;
+    return false;
 }
 //# sourceMappingURL=types.js.map

@@ -2,6 +2,8 @@ import { add_log_entry, get_element, DynamicForm, CategoryInput } from "../core/
 import { get_db_manager, get_category_titles, get_box_titles } from "../core/index.js";
 import { renderPattern } from "../core/vocab.js";
 import { Item } from "../core/types.js";
+//TODO: verify intention before adding
+//TODO: consistent dates
 let intake_form = undefined;
 function log_item_addition(success, item) {
     if (success && item) {

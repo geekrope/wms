@@ -11,6 +11,9 @@ function filter_temperature(data, alpha) {
     const tmp_filtered = filtfilt(data.tmp, EMA(alpha));
     return { stamps: data.stamps, humidity: data.humidity, frequency_ms: data.frequency_ms, tmp: tmp_filtered };
 }
+function negate_temperature(data) {
+    return { ...data, tmp: data.tmp.map((value) => -value) };
+}
 function build_temperature_trace(data, color, name) {
     return {
         type: "scatter",
@@ -112,9 +115,14 @@ export async function refresh_climate_plot(container) {
     const begin = new Date(end.getTime() - CLIMATE_WINDOW_DAYS * 24 * 60 * 60 * 1000);
     const smoothing_slider = get_element("analyticsSmoothingSlider");
     const alpha = 1 - Number(smoothing_slider.value);
+    const show_lows = get_element("analyticsExtremeLows").checked;
+    const prominence_slider = get_element("analyticsProminenceSlider");
+    const min_prominence = Number(prominence_slider.value);
+    get_element("analyticsProminenceValue").textContent = min_prominence.toFixed(1);
     const data = await provider.get_data(begin, end);
     const data_filtered = filter_temperature(data, alpha);
-    const temperature_peaks = find_peaks(data_filtered.tmp);
+    const peak_source = show_lows ? negate_temperature(data_filtered) : data_filtered;
+    const temperature_peaks = find_peaks(peak_source.tmp).filter((peak) => peak.prominence >= min_prominence);
     render_temperature_chart(container, data, data_filtered, temperature_peaks);
     const peaks_table_container = get_element("analyticsPeaksTableContainer");
     render_peaks_table(peaks_table_container, data_filtered, temperature_peaks);

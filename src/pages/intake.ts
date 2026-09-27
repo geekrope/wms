@@ -3,6 +3,9 @@ import { get_db_manager, get_category_titles, get_box_titles } from "../core/ind
 import { renderPattern } from "../core/vocab.js";
 import { Item } from "../core/types.js";
 
+//TODO: verify intention before adding
+//TODO: consistent dates
+
 let intake_form: DynamicForm | undefined = undefined;
 
 function log_item_addition(success: boolean, item?: Item) {

@@ -7,6 +7,7 @@ import { renderPattern } from "../core/vocab.js";
 import { refresh_regression_plot } from "./analytics_linreg.js";
 import { refresh_activity_plot } from "./analytics_activity.js";
 import { refresh_climate_plot } from "./analytics_climate.js";
+import { refresh_expiration_plot } from "./analytics_expiration.js";
 let analytics_object = undefined;
 export let analytics_category_input;
 export function get_analytics_object() {
@@ -21,6 +22,8 @@ export async function refresh_analytics() {
     await refresh_regression_plot();
     const heatmap_container = get_element("analyticsHeatmapContainer");
     await refresh_activity_plot(heatmap_container);
+    const expiration_container = get_element("analyticsExpirationContainer");
+    await refresh_expiration_plot(expiration_container);
     const climate_container = get_element("analyticsClimateContainer");
     await refresh_climate_plot(climate_container);
 }
@@ -37,6 +40,17 @@ export async function init_analytics(db_driver, manager) {
     });
     const smoothing_slider = get_element("analyticsSmoothingSlider");
     smoothing_slider.addEventListener("input", async () => {
+        const climate_container = get_element("analyticsClimateContainer");
+        await refresh_climate_plot(climate_container);
+    });
+    for (const id of ["analyticsExtremeHighs", "analyticsExtremeLows"]) {
+        get_element(id).addEventListener("change", async () => {
+            const climate_container = get_element("analyticsClimateContainer");
+            await refresh_climate_plot(climate_container);
+        });
+    }
+    const prominence_slider = get_element("analyticsProminenceSlider");
+    prominence_slider.addEventListener("input", async () => {
         const climate_container = get_element("analyticsClimateContainer");
         await refresh_climate_plot(climate_container);
     });

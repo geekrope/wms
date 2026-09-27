@@ -80,5 +80,32 @@ export class Analytics {
             GROUP BY T.date
             ORDER BY T.date;`, (obj) => ({ date: new Date(`${obj.date}T00:00:00Z`), count: obj.count }), { ":begin": begin, ":end": end });
     }
+    async get_counts(begin, end) {
+        let params;
+        let where_clause;
+        if (begin !== undefined && end !== undefined) {
+            params = [begin, end];
+            where_clause = `I.expiration_date >= ? AND I.expiration_date < ?`;
+        }
+        else if (begin !== undefined) {
+            params = [begin];
+            where_clause = `I.expiration_date >= ?`;
+        }
+        else if (end !== undefined) {
+            params = [end];
+            where_clause = `I.expiration_date < ?`;
+        }
+        else {
+            params = [];
+            where_clause = `1`;
+        }
+        return await this.db_driver.query(`SELECT C.title, SUM(I.remove_date IS NULL) AS count
+                 FROM items AS I 
+                JOIN categories AS C ON C.id = I.category_id
+                WHERE ${where_clause}
+                GROUP BY C.title
+                HAVING count > 0
+                ORDER BY count DESC;`, (obj) => { return { category: obj.title, count: obj.count }; }, params);
+    }
 }
 //# sourceMappingURL=analytics_utils.js.map

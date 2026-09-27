@@ -31,7 +31,7 @@ export function item_less(a: Item, b: Item): boolean {
     if (a.status != b.status) return a.status > b.status;
     if (a.expiration_date != b.expiration_date) return a.expiration_date < b.expiration_date;
 
-    return true;
+    return false;
 }
 
 export type Category = {

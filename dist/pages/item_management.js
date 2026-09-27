@@ -23,7 +23,7 @@ function get_item_comparator(weights, adjacency_list) {
         const node_a = nodes.get(a.box);
         const node_b = nodes.get(b.box);
         if (!node_a || !node_b || !priorities.has(node_a) || !priorities.has(node_b)) {
-            return true;
+            return false;
         }
         return priorities.get(node_a) < priorities.get(node_b);
     };
