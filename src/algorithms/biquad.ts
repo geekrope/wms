@@ -24,10 +24,32 @@ export function apply_biquad(x: number[], coeffs: BiquadCoeffs) {
     return y;
 }
 
-export function filtfilt(x: number[], coeffs: BiquadCoeffs) {
-    let result = apply_biquad(x, coeffs);
-    result = apply_biquad(result.reverse(), coeffs);
-    return result.reverse();
+// even padding is symmetric around the vertical line, 
+// odd padding is symmetric around the edge point.
+export function filtfilt(x: number[], coeffs: BiquadCoeffs, padding: number = 0, padding_type: "odd" | "even" = "odd") {
+    padding = Math.min(padding, x.length >> 1);    
+    let left_slice: number[];
+    let right_slice: number[];
+
+    switch (padding_type) {
+        case "odd":
+            left_slice = x.slice(1, padding + 1).
+                reverse().
+                map((val) => 2 * x[0] - val);
+            right_slice = x.slice(x.length - padding - 1, x.length - 1).
+                reverse().
+                map((val) => 2 * x[x.length - 1] - val);
+            break;
+        case "even":
+            left_slice = x.slice(0, padding).reverse();
+            right_slice = x.slice(x.length - padding, x.length).reverse();
+    }
+    let signal = [...left_slice, ...x, ...right_slice];
+
+    let result = apply_biquad(signal, coeffs);
+    result = apply_biquad(result.reverse(), coeffs).reverse();
+
+    return result.slice(padding, result.length - padding);
 }
 
 // H(z) = alpha / (1 - (1 - alpha) z^{-1})

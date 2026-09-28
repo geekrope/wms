@@ -1,7 +1,7 @@
 import { OpenMeteoProvider, MUNICH_LAT, MUNICH_LON, type EnvironmentData } from "./environment_provider.js";
 import { filtfilt, EMA } from "../algorithms/biquad.js";
 import { find_peaks, type Peak } from "../algorithms/peaks.js";
-import { get_element } from "../core/dom_utils.js";
+import { add_log_entry, get_element } from "../core/dom_utils.js";
 
 declare const Plotly: any;
 
@@ -13,7 +13,7 @@ const PEAK_COLOR = "#e67e22";
 const provider = new OpenMeteoProvider(MUNICH_LAT, MUNICH_LON);
 
 function filter_temperature(data: EnvironmentData, alpha: number): EnvironmentData {
-    const tmp_filtered = filtfilt(data.tmp, EMA(alpha))
+    const tmp_filtered = filtfilt(data.tmp, EMA(alpha), Math.floor(data.tmp.length * 0.1), "odd")
     return { stamps: data.stamps, humidity: data.humidity, frequency_ms: data.frequency_ms, tmp: tmp_filtered };
 }
 
@@ -143,12 +143,18 @@ export async function refresh_climate_plot(container: HTMLElement): Promise<void
     const min_prominence = Number(prominence_slider.value);
     get_element("analyticsProminenceValue").textContent = min_prominence.toFixed(1);
 
-    const data = await provider.get_data(begin, end);
-    const data_filtered = filter_temperature(data, alpha);
-    const peak_source = show_lows ? negate_temperature(data_filtered) : data_filtered;
-    const temperature_peaks = find_peaks(peak_source.tmp).filter((peak) => peak.prominence >= min_prominence);
-    render_temperature_chart(container, data, data_filtered, temperature_peaks);
+    try {
+        const data = await provider.get_data(begin, end);
+        const data_filtered = filter_temperature(data, alpha);
+        const peak_source = show_lows ? negate_temperature(data_filtered) : data_filtered;
+        const temperature_peaks = find_peaks(peak_source.tmp).filter((peak) => peak.prominence >= min_prominence);
+        render_temperature_chart(container, data, data_filtered, temperature_peaks);
 
-    const peaks_table_container = get_element("analyticsPeaksTableContainer");
-    render_peaks_table(peaks_table_container, data_filtered, temperature_peaks);
+        const peaks_table_container = get_element("analyticsPeaksTableContainer");
+        render_peaks_table(peaks_table_container, data_filtered, temperature_peaks);
+    }
+    catch (err) {
+        console.error(err);
+        add_log_entry(String(err), "statsLog", true);
+    }
 }

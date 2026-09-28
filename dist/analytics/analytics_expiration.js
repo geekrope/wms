@@ -1,7 +1,7 @@
 import {} from "./analytics_utils.js";
 import { get_analytics_object } from "./analytics_engine.js";
-const EXPIRED_COLOR = "#c0392b";
-const BIN_COLORS = ["#104281", "#256abf", "#5598e7", "#9ec5f4"];
+const EXPIRED_COLOR = "#c81400";
+const BIN_COLORS = ["#f06a00", "#d9b000", "#5aa82a", "#0b6b4b"];
 const PLOT_HEIGHT = 600;
 function compress_string(input, max_char, placeholder = "...") {
     const len = max_char - placeholder.length;

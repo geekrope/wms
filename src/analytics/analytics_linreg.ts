@@ -4,6 +4,8 @@ import { stat_test, qq, mean_test } from "./linear_regression.js";
 import { get_analytics_object, analytics_category_input } from "./analytics_engine.js";
 import { get_element } from "../core/dom_utils.js";
 
+//TODO: refactor
+
 declare const Plotly: any;
 
 const INCREASING_COLOR = "rgb(78, 159, 131)";

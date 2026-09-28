@@ -5,8 +5,8 @@ declare const Plotly: any;
 
 type ExpirationBin = { label: string, color: string, begin?: number, end?: number };
 
-const EXPIRED_COLOR = "#a50f15";
-const BIN_COLORS = ["#e0641f", "#c9b31a", "#3b8fd9", "#1c4f9c"];
+const EXPIRED_COLOR = "#c81400";
+const BIN_COLORS = ["#f06a00", "#d9b000", "#5aa82a", "#0b6b4b"];
 const PLOT_HEIGHT = 600;
 
 function compress_string(input: string, max_char: number, placeholder = "...") {

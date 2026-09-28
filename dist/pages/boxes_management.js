@@ -2,7 +2,7 @@ import { add_log_entry, empty_container, get_element, DynamicForm } from "../cor
 import { get_db_manager, reload_boxes } from "../core/index.js";
 import { renderPattern, repr } from "../core/vocab.js";
 import { Item } from "../core/types.js";
-import { refresh_boxes_graph, init_boxes_graph } from "../algorithms/boxes_graph.js";
+import { refresh_boxes_graph, init_boxes_graph } from "./boxes_graph.js";
 import { heapify, partial_heapsort } from "../algorithms/heap.js";
 export class BoxElement {
     box;

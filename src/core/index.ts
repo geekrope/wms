@@ -13,6 +13,8 @@ import { type Category, type Box } from "./types.js";
 
 //TODO: consistent error logging
 //TODO: edit box names, category names and their properties
+//TODO: DI - make this file the composition root: build db_manager and the categories/boxes cache here and pass them
+//      to init_* as a context object, so pages/analytics/boxes_graph stop importing index.ts back (removes the import cycles)
 
 declare global {
     interface Window {
