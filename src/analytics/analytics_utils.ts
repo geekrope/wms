@@ -1,8 +1,8 @@
 import type { IDatabaseDriver } from "../core/db_driver.js";
 import type { DatabaseManager } from "../core/main.js";
 
-export type TimelinePoint = { date: number, count: number };
-export type TimelineEvent = { date: number, delta: number };
+export type TimelinePoints = { dates: number[], counts: number[] };
+export type TimelineEvents = { dates: number[], deltas: number[] };
 export type ActivityEvent = { date: number, delta: number };
 export type ActivityCount = { date: Date, count: number };
 export type RangeCount = { category: string, count: number };
@@ -60,10 +60,10 @@ export class Analytics {
             });
     }
 
-    public async get_category_events(category: string): Promise<TimelineEvent[]> {
+    public async get_category_events(category: string): Promise<TimelineEvents> {
         const category_id = await this.resolve_category_id(category);
 
-        return await this.db_driver.query<TimelineEvent>(`
+        const zipped =  await this.db_driver.query(`
             WITH raw AS (
                 SELECT add_date AS date, 1 AS delta FROM items
                 WHERE category_id = :category_id
@@ -77,6 +77,8 @@ export class Analytics {
             ORDER BY date;`,
             (obj: any) => ({ date: obj.date as number, delta: obj.delta as number }),
             { ":category_id": category_id });
+
+        return { dates: zipped.map((val) => val.date), deltas: zipped.map((val) => val.delta)}
     }
 
     public async get_activity(begin: number, end: number): Promise<ActivityCount[]> {

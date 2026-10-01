@@ -122,6 +122,7 @@ function render_temperature_chart(container: HTMLElement, data: EnvironmentData,
         ...build_temperature_peaks_trace(data_filtered, temperature_peaks)
     ];
 
+    Plotly.purge(container);
     Plotly.newPlot(container, traces, {
         xaxis: { title: { text: "Date" } },
         yaxis: { title: { text: "°C" } },

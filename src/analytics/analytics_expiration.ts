@@ -11,12 +11,12 @@ const PLOT_HEIGHT = 600;
 
 function compress_string(input: string, max_char: number, placeholder = "...") {
     const len = max_char - placeholder.length;
-    if (input.length > len) {
+    if (input.length > max_char) {
         const left = len >> 1;
         const right = len - left;
         const result = input.substring(0, left) +
             placeholder +
-            input.substring(input.length - right, input.length);
+            input.substring(input.length - right);
         return result;
     }
     else {
@@ -71,6 +71,7 @@ export async function refresh_expiration_plot(container: HTMLElement): Promise<v
         .map((val) => val[0]);
     const traces = bins.map((bin, i) => build_bin_trace(bin, categories, bin_counts[i]));
 
+    Plotly.purge(container);
     Plotly.newPlot(container, traces, {
         barmode: "stack",
         height: PLOT_HEIGHT,

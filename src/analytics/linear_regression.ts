@@ -35,7 +35,7 @@ export function stat_test(X: number[][], y: number[][]) {
 
 export function mean_test(x: number[]) {
     const n = x.length;
-    const mean = math.mean(x);    
+    const mean = math.mean(x);
     const centered = x.map((value: number) => value - mean);
     const sigma_sqr = math.multiply(math.transpose(centered), centered) / (n - 1);
     const std_err = math.sqrt(sigma_sqr / n); // design matrix column 1 vector, thus X^TX = n, (X^TX)^-1 = 1/n
@@ -55,28 +55,42 @@ export function mean_test(x: number[]) {
     };
 }
 
+// we call the quantile inf {x: F(x) >= q}
 function find_quantile_index(quantiles: number[][], value: number): number {
     let lo = 0;
     let hi = quantiles.length;
 
     while (lo + 1 < hi) {
         const mid = (lo + hi) >> 1;
-        if (quantiles[mid][1] <= value) lo = mid;
-        else hi = mid;
+        if (quantiles[mid][1] < value) lo = mid;
+        else hi = mid; // quantiles[hi] >= value
     }
 
-    return lo;
+    return Math.min(hi, quantiles.length - 1);
 }
 
-// think if we want to calculate the true variance of the residuals.
+function get_quantiles(x: number[], tol = 1e-6) {
+    let quantile: number = 0;
+    const quantiles = [];
+
+    for (let idx = x.length - 1; idx >= 0; idx--) {
+        if (idx == x.length - 1 || x[idx] + tol < x[idx + 1]) {
+            quantile = (idx + 0.5) / x.length;
+        }
+        quantiles.push(quantile);
+    }
+    return quantiles.reverse();
+}
+
 export function qq(residuals: number[], sigma: number): { x: number[], y: number[] } {
     const sorted_residuals = [...residuals].sort((a, b) => a - b);
     const scaled_residuals = sorted_residuals.map(r => r / sigma);
     const stats = new Statistics([], [], {});
     const distribution = stats.normalCumulativeDistribution();
     const distribution_flat = Object.entries(distribution).map(([key, value]) => [Number(key), Number(value)]).sort((a, b) => a[0] - b[0]);
+    const empirical_quantiles = get_quantiles(sorted_residuals);
     const quantiles = scaled_residuals.map((_residual, index) => {
-        const p = (index + 0.5) / scaled_residuals.length; // midpoint positions: i / n would put the first point at -infinity
+        const p = empirical_quantiles[index];
         if (p < 0.5) {
             const quantile_index = find_quantile_index(distribution_flat, 1 - p);
             return -distribution_flat[quantile_index][0];

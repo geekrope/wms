@@ -103,6 +103,7 @@ function render_temperature_chart(container, data, data_filtered, temperature_pe
         build_temperature_trace(data_filtered, TEMPERATURE_COLOR, "Smoothed"),
         ...build_temperature_peaks_trace(data_filtered, temperature_peaks)
     ];
+    Plotly.purge(container);
     Plotly.newPlot(container, traces, {
         xaxis: { title: { text: "Date" } },
         yaxis: { title: { text: "°C" } },

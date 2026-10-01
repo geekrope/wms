@@ -52,7 +52,7 @@ export class Analytics {
     }
     async get_category_events(category) {
         const category_id = await this.resolve_category_id(category);
-        return await this.db_driver.query(`
+        const zipped = await this.db_driver.query(`
             WITH raw AS (
                 SELECT add_date AS date, 1 AS delta FROM items
                 WHERE category_id = :category_id
@@ -64,6 +64,7 @@ export class Analytics {
             FROM raw as R
             GROUP BY date(R.date / 1000, 'unixepoch')
             ORDER BY date;`, (obj) => ({ date: obj.date, delta: obj.delta }), { ":category_id": category_id });
+        return { dates: zipped.map((val) => val.date), deltas: zipped.map((val) => val.delta) };
     }
     async get_activity(begin, end) {
         return await this.db_driver.query(`

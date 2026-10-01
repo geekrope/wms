@@ -419,9 +419,9 @@ export const AnalyticsTests = {
         await seed_removed_item(manager, category_id, box_id, day1, null); // +1 on day1, still active
         await seed_removed_item(manager, category_id, box_id, day1, day2); // +1 on day1, -1 on day2
         const events = await analytics.get_category_events("Widgets");
-        assert(events.length === 2, `Expected 2 distinct days of events, got ${events.length}`);
-        assert(events[0]?.date === day1 && events[0]?.delta === 2, "Day 1 nets two additions (+2)");
-        assert(events[1]?.date === day2 && events[1]?.delta === -1, "Day 2 nets one removal (-1)");
+        assert(events.dates.length === 2 && events.deltas.length === 2, `Expected 2 distinct days of events, got ${events.dates.length} dates and ${events.deltas.length} deltas`);
+        assert(events.dates[0] === day1 && events.deltas[0] === 2, "Day 1 nets two additions (+2)");
+        assert(events.dates[1] === day2 && events.deltas[1] === -1, "Day 2 nets one removal (-1)");
     },
     async testGetCategoryEventsThrowsForUnknownCategory(assert) {
         const { manager, driver } = await create_test_database();

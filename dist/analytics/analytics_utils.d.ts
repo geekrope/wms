@@ -1,12 +1,12 @@
 import type { IDatabaseDriver } from "../core/db_driver.js";
 import type { DatabaseManager } from "../core/main.js";
-export type TimelinePoint = {
-    date: number;
-    count: number;
+export type TimelinePoints = {
+    dates: number[];
+    counts: number[];
 };
-export type TimelineEvent = {
-    date: number;
-    delta: number;
+export type TimelineEvents = {
+    dates: number[];
+    deltas: number[];
 };
 export type ActivityEvent = {
     date: number;
@@ -30,7 +30,7 @@ export declare class Analytics {
         value: number;
         start: Date;
     }[]>;
-    get_category_events(category: string): Promise<TimelineEvent[]>;
+    get_category_events(category: string): Promise<TimelineEvents>;
     get_activity(begin: number, end: number): Promise<ActivityCount[]>;
     get_counts(begin?: number, end?: number): Promise<RangeCount[]>;
 }
