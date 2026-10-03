@@ -4,6 +4,8 @@ import { type Category, type Box } from "./types.js";
 import { type AdjacencyList } from "../algorithms/graph_utils.js";
 
 //TODO: add hard delete for items for example for erroneous additions (wrong date)
+//TODO: named params
+//TODO: allow arbitrary date in add items
 
 export class DatabaseManager {
     constructor(private db_driver: IDatabaseDriver) { }

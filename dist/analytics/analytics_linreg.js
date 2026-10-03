@@ -129,7 +129,7 @@ function build_regression_trace(dates, counts, cutoff_idx) {
         {
             type: "scatter",
             mode: "lines",
-            name: "Past trend projection",
+            name: "Past OLS extrapolation",
             x: [regression.x0, regression.x1],
             y: [regression.y0, regression.y1],
             line: { color: "rgb(0, 191, 255)", width: 2, dash: "dash" },

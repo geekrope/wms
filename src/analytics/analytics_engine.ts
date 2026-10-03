@@ -8,6 +8,7 @@ import { refresh_regression_plot } from "./analytics_linreg.js";
 import { refresh_activity_plot } from "./analytics_activity.js";
 import { refresh_climate_plot } from "./analytics_climate.js";
 import { refresh_expiration_plot } from "./analytics_expiration.js";
+import { refresh_coocurence_plot } from "./analytics_coocurence.js";
 
 let analytics_object: Analytics | undefined = undefined;
 export let analytics_category_input: CategoryInput | undefined;
@@ -31,6 +32,9 @@ export async function refresh_analytics(): Promise<void> {
 
     const climate_container = get_element("analyticsClimateContainer");
     await refresh_climate_plot(climate_container);
+
+    const coocurence_container = get_element("analyticsCoocurenceContainer");
+    await refresh_coocurence_plot(coocurence_container);
 }
 
 export async function init_analytics(db_driver: IDatabaseDriver, manager: DatabaseManager): Promise<void> {
@@ -70,6 +74,15 @@ export async function init_analytics(db_driver: IDatabaseDriver, manager: Databa
         const climate_container = get_element("analyticsClimateContainer");
         await refresh_climate_plot(climate_container);
     });
+
+    const refresh_coocurence = async () => {
+        const coocurence_container = get_element("analyticsCoocurenceContainer");
+        await refresh_coocurence_plot(coocurence_container);
+    };
+    for (const id of ["analyticsCoocurenceAdd", "analyticsCoocurenceRemove"]) {
+        get_element<HTMLInputElement>(id).addEventListener("change", refresh_coocurence);
+    }
+    get_element<HTMLInputElement>("analyticsCoocurenceDepthSlider").addEventListener("input", refresh_coocurence);
 
     await refresh_analytics();
     window.onresize = async () => {

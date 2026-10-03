@@ -101,12 +101,46 @@ export class Analytics {
             where_clause = `1`;
         }
         return await this.db_driver.query(`SELECT C.title, SUM(I.remove_date IS NULL) AS count
-                 FROM items AS I 
+                FROM items AS I 
                 JOIN categories AS C ON C.id = I.category_id
                 WHERE ${where_clause}
                 GROUP BY C.title
                 HAVING count > 0
                 ORDER BY count DESC;`, (obj) => { return { category: obj.title, count: obj.count }; }, params);
+    }
+    // compute P(A cap B) / (P(A) * P(B)). if the events are
+    // completely random P(A cap B) = P(A) * P(B) hence lift is close to 1
+    // the event A subset {1, ..., N} is the days when category A had an event (add or remove, depending on type)
+    // N is the number of days with activity. the proability measure is uniform
+    async get_lift(threshold = 5, type = "add") {
+        const date_source = type == "add" ? "add_date" : "remove_date";
+        const filter = type == "add" ? "1" : "remove_date IS NOT NULL";
+        return await this.db_driver.query(`WITH events AS (SELECT category_id AS cat_id, date(${date_source} / 1000, 'unixepoch') AS date
+                FROM items
+                WHERE ${filter}
+            ),
+            event_prob AS (SELECT cat_id, 1.0 * COUNT(DISTINCT date) / (SELECT COUNT(DISTINCT date) FROM events) AS prob
+                FROM events 
+                GROUP BY cat_id
+            ),
+            pairs AS (SELECT DISTINCT MIN(c1.cat_id, c2.cat_id) AS cat1, MAX(c1.cat_id, c2.cat_id) AS cat2, c1.date
+                FROM events AS c1
+                JOIN events AS c2 ON (c1.date = c2.date AND c1.cat_id <> c2.cat_id)
+            ),
+            pairs_prob AS (SELECT cat1, cat2, 1.0 * COUNT(DISTINCT date) / (SELECT COUNT(DISTINCT date) FROM events) AS prob
+                FROM pairs
+                GROUP BY cat1, cat2
+                HAVING COUNT(DISTINCT date) > ?
+            ),
+            lift AS (SELECT pp.cat1, pp.cat2, pp.prob / (ep1.prob * ep2.prob) AS lift
+                FROM pairs_prob AS pp
+                JOIN event_prob AS ep1 ON ep1.cat_id = pp.cat1
+                JOIN event_prob AS ep2 ON ep2.cat_id = pp.cat2
+            )
+            SELECT l.lift, c1.title as title1, c2.title as title2
+            FROM lift AS l
+            JOIN categories AS c1 ON l.cat1 = c1.id
+            JOIN categories AS c2 ON l.cat2 = c2.id`, (obj) => { return { title1: obj.title1, title2: obj.title2, lift: obj.lift }; }, [threshold]);
     }
 }
 //# sourceMappingURL=analytics_utils.js.map

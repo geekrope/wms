@@ -1,11 +1,14 @@
 import type { IDatabaseDriver } from "../core/db_driver.js";
 import type { DatabaseManager } from "../core/main.js";
 
+//TODO: named params
+
 export type TimelinePoints = { dates: number[], counts: number[] };
 export type TimelineEvents = { dates: number[], deltas: number[] };
 export type ActivityEvent = { date: number, delta: number };
 export type ActivityCount = { date: Date, count: number };
 export type RangeCount = { category: string, count: number };
+export type LiftEntry = { title1: string, title2: string, lift: number }
 
 export class Analytics {
     constructor(private db_driver: IDatabaseDriver, private manager: DatabaseManager) { }
@@ -63,7 +66,7 @@ export class Analytics {
     public async get_category_events(category: string): Promise<TimelineEvents> {
         const category_id = await this.resolve_category_id(category);
 
-        const zipped =  await this.db_driver.query(`
+        const zipped = await this.db_driver.query(`
             WITH raw AS (
                 SELECT add_date AS date, 1 AS delta FROM items
                 WHERE category_id = :category_id
@@ -78,7 +81,7 @@ export class Analytics {
             (obj: any) => ({ date: obj.date as number, delta: obj.delta as number }),
             { ":category_id": category_id });
 
-        return { dates: zipped.map((val) => val.date), deltas: zipped.map((val) => val.delta)}
+        return { dates: zipped.map((val) => val.date), deltas: zipped.map((val) => val.delta) }
     }
 
     public async get_activity(begin: number, end: number): Promise<ActivityCount[]> {
@@ -122,7 +125,7 @@ export class Analytics {
 
         return await this.db_driver.query<{ category: string, count: number }>(
             `SELECT C.title, SUM(I.remove_date IS NULL) AS count
-                 FROM items AS I 
+                FROM items AS I 
                 JOIN categories AS C ON C.id = I.category_id
                 WHERE ${where_clause}
                 GROUP BY C.title
@@ -131,5 +134,43 @@ export class Analytics {
             (obj) => { return { category: obj.title as string, count: obj.count as number }; },
             params
         )
+    }
+
+    // compute P(A cap B) / (P(A) * P(B)). if the events are
+    // completely random P(A cap B) = P(A) * P(B) hence lift is close to 1
+    // the event A subset {1, ..., N} is the days when category A had an event (add or remove, depending on type)
+    // N is the number of days with activity. the proability measure is uniform
+    public async get_lift(threshold: number = 5, type: "add" | "remove" = "add"): Promise<LiftEntry[]> {
+        const date_source = type == "add" ? "add_date" : "remove_date";
+        const filter = type == "add" ? "1" : "remove_date IS NOT NULL";
+        return await this.db_driver.query<LiftEntry>(
+            `WITH events AS (SELECT category_id AS cat_id, date(${date_source} / 1000, 'unixepoch') AS date
+                FROM items
+                WHERE ${filter}
+            ),
+            event_prob AS (SELECT cat_id, 1.0 * COUNT(DISTINCT date) / (SELECT COUNT(DISTINCT date) FROM events) AS prob
+                FROM events 
+                GROUP BY cat_id
+            ),
+            pairs AS (SELECT DISTINCT MIN(c1.cat_id, c2.cat_id) AS cat1, MAX(c1.cat_id, c2.cat_id) AS cat2, c1.date
+                FROM events AS c1
+                JOIN events AS c2 ON (c1.date = c2.date AND c1.cat_id <> c2.cat_id)
+            ),
+            pairs_prob AS (SELECT cat1, cat2, 1.0 * COUNT(DISTINCT date) / (SELECT COUNT(DISTINCT date) FROM events) AS prob
+                FROM pairs
+                GROUP BY cat1, cat2
+                HAVING COUNT(DISTINCT date) > ?
+            ),
+            lift AS (SELECT pp.cat1, pp.cat2, pp.prob / (ep1.prob * ep2.prob) AS lift
+                FROM pairs_prob AS pp
+                JOIN event_prob AS ep1 ON ep1.cat_id = pp.cat1
+                JOIN event_prob AS ep2 ON ep2.cat_id = pp.cat2
+            )
+            SELECT l.lift, c1.title as title1, c2.title as title2
+            FROM lift AS l
+            JOIN categories AS c1 ON l.cat1 = c1.id
+            JOIN categories AS c2 ON l.cat2 = c2.id`,
+            (obj) => { return { title1: obj.title1 as string, title2: obj.title2 as string, lift: obj.lift as number } },
+            [threshold]);
     }
 }

@@ -894,3 +894,43 @@ hr.section-divider {
     font-size: 12px;
     letter-spacing: 0.5px;
 }
+
+.cluster-buckets {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.cluster-bucket {
+    background: #f8f9fa;
+    border: 1px solid #ecf0f1;
+    border-radius: 10px;
+    padding: 12px;
+}
+
+.cluster-bucket.muted {
+    opacity: 0.6;
+}
+
+.cluster-bucket-header {
+    font-size: 12px;
+    font-weight: 600;
+    color: #7f8c8d;
+    margin-bottom: 8px;
+}
+
+.cluster-bucket-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.category-chip {
+    padding: 4px 10px;
+    background: #ebf5fb;
+    color: #2980b9;
+    border: 1px solid #d4e6f1;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 500;
+}

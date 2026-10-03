@@ -20,6 +20,11 @@ export type RangeCount = {
     category: string;
     count: number;
 };
+export type LiftEntry = {
+    title1: string;
+    title2: string;
+    lift: number;
+};
 export declare class Analytics {
     private db_driver;
     private manager;
@@ -33,5 +38,6 @@ export declare class Analytics {
     get_category_events(category: string): Promise<TimelineEvents>;
     get_activity(begin: number, end: number): Promise<ActivityCount[]>;
     get_counts(begin?: number, end?: number): Promise<RangeCount[]>;
+    get_lift(threshold?: number, type?: "add" | "remove"): Promise<LiftEntry[]>;
 }
 //# sourceMappingURL=analytics_utils.d.ts.map

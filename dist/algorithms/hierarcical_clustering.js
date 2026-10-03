@@ -1,22 +1,16 @@
 import { insert, erase, heapify } from "./heap.js";
-
-type EdgeHierarical = { v: number, u: number, gen_v: number, gen_u: number, similarity: number };
-export type Merge = { v: number, u: number, similarity: number };
-
-// TODO: add tests
 // using average linkage, treat the graph as it 
 // was complete initializing the missing edges with zeros
-export function cluster(edges: { to: number, weight: number }[][]): Merge[] {
+export function cluster(edges) {
     const n = edges.length;
     const generation = new Array(n).fill(0);
-    const queue: EdgeHierarical[] = [];
-    const weights: number[][] = [];
-    const sizes: number[] = new Array(n).fill(0);
-    const merges: Merge[] = [];
-    const comparator = (a: EdgeHierarical, b: EdgeHierarical) => {
+    const queue = [];
+    const weights = [];
+    const sizes = new Array(n).fill(0);
+    const merges = [];
+    const comparator = (a, b) => {
         return a.similarity > b.similarity;
     };
-
     for (let v = 0; v < n; v++) {
         weights[v] = new Array(n).fill(0);
         sizes[v] = 1;
@@ -28,9 +22,8 @@ export function cluster(edges: { to: number, weight: number }[][]): Merge[] {
         }
     }
     heapify(queue, comparator);
-
     while (true) {
-        let largest_edge: EdgeHierarical | undefined = undefined;
+        let largest_edge = undefined;
         while (queue.length > 0) {
             const top = queue[0];
             erase(queue, 0, comparator);
@@ -39,19 +32,15 @@ export function cluster(edges: { to: number, weight: number }[][]): Merge[] {
                 break;
             }
         }
-
         if (!largest_edge) {
             break;
         }
-
         const cluster_1 = Math.min(largest_edge.v, largest_edge.u);
         const cluster_2 = Math.max(largest_edge.v, largest_edge.u);
-
         // the similarity is non-increasing since at each step 
         // we take the edges greedily hence the freshly
         // added edge cannot be greater than the previous ones
-        merges.push({ v: cluster_1, u: cluster_2, similarity: largest_edge.similarity })
-
+        merges.push({ v: cluster_1, u: cluster_2, similarity: largest_edge.similarity });
         // when we merge two clusters all the edges belonging to the second one are
         // connected to the first one. hence the the total weight
         // grows by weights[cluster_2][i]
@@ -59,25 +48,20 @@ export function cluster(edges: { to: number, weight: number }[][]): Merge[] {
             weights[cluster_1][i] += weights[cluster_2][i];
             weights[cluster_2][i] = 0;
         }
-
         sizes[cluster_1] += sizes[cluster_2];
         sizes[cluster_2] = 0;
-
         // maintain the symmetry
         for (let i = 0; i < n; i++) {
             weights[i][cluster_1] = weights[cluster_1][i];
             weights[i][cluster_2] = 0;
         }
-
         generation[cluster_1]++;
         generation[cluster_2] = -1;
-
         for (let u = 0; u < n; u++) {
             // count the edges between non-empty clusters
             if (u != cluster_1 && generation[u] != -1 && sizes[cluster_1] > 0 && sizes[u] > 0) {
                 const v_min = Math.min(cluster_1, u);
                 const u_max = Math.max(cluster_1, u);
-
                 insert(queue, {
                     v: v_min,
                     u: u_max,
@@ -88,6 +72,6 @@ export function cluster(edges: { to: number, weight: number }[][]): Merge[] {
             }
         }
     }
-
     return merges;
 }
+//# sourceMappingURL=hierarcical_clustering.js.map
