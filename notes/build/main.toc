@@ -10,3 +10,4 @@
 \contentsline {section}{\numberline {4}Heap asymptotics}{17}{section.4}%
 \contentsline {section}{\numberline {5}Graph transitive closure}{19}{section.5}%
 \contentsline {section}{\numberline {6}Finding valleys using monotonic stack}{21}{section.6}%
+\contentsline {section}{\numberline {7}Hierarchical clustering}{23}{section.7}%

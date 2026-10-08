@@ -1,0 +1,21 @@
+\section{Hierarchical clustering}
+\begin{theorem}
+    Let $C_t$ be the cost of the edge between the clusters (average linkage) merged at the $t$-th step. It holds that $C_1 \leq C_2 \leq ... \leq C_n$, where $n + 1$ is the number of nodes.
+\end{theorem}
+\begin{proof}
+    Suppose we merge the clusters $i$ and $j$ at the step $t$. Let $C_{pq}$ be the cost between any two clusters $p$, $q$ and $N_{k}$ be the number of nodes in the cluster $k$. By the construction of \todo{alg} we have that:
+    \begin{equation} \label{eq:hierarchical construction}
+        C_{ij} \leq C_{pq} \quad \forall p \neq q
+    \end{equation}
+    
+    Let us consider a cluster $k$, with $k \neq i, k \neq j$. Then the sum of all the edges between $i$ and $k$ is $C_{ik} \cdot (N_i N_k)$ and the same for the clusters $j$ and $k$. The new cost between the cluster $(i,j)$ and $k$ is as follows:
+    \begin{align*}
+        C_{(i,j)k}
+         & = \frac{C_{ik} \cdot (N_i N_k) + C_{jk} \cdot (N_j N_k)}{(N_i + N_j) N_k}
+        = \frac{C_{ik} \cdot N_i + C_{jk} \cdot N_j}{N_i + N_j}
+        \\ &\geq \frac{\min\{C_{ik}, C_{jk}\} \cdot N_i + \min\{C_{ik}, C_{jk}\} \cdot N_j}{N_i + N_j}
+        = \min\{C_{ik}, C_{jk}\}
+    \end{align*}
+
+    By \eqref{eq:hierarchical construction} we have that $C_{ij} \leq C_{ik}$ and $C_{ij} \leq C_{jk}$, thus $C_{ij} \leq \min\{C_{ik}, C_{jk}\}$, so $C_{ij} \leq C_{(i,j)k} \; \forall k$. This means that any edge at the step $t+1$ is not less than $C_{ij}$ by the previous observation and \eqref{eq:hierarchical construction} combined. That yields that $C_{t+1} \geq C_{ij} = C_{t}$.
+\end{proof}

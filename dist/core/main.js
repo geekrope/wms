@@ -2,6 +2,8 @@ import { Item } from "./types.js";
 import {} from "./types.js";
 import {} from "../algorithms/graph_utils.js";
 //TODO: add hard delete for items for example for erroneous additions (wrong date)
+//TODO: named params
+//TODO: allow arbitrary date in add items
 export class DatabaseManager {
     db_driver;
     constructor(db_driver) {

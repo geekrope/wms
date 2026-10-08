@@ -83,7 +83,8 @@ export class Analytics {
 
         return { dates: zipped.map((val) => val.date), deltas: zipped.map((val) => val.delta) }
     }
-
+    
+    // fr timeline is filtered so that only the dates from items are left
     public async get_activity(begin: number, end: number): Promise<ActivityCount[]> {
         return await this.db_driver.query<ActivityCount>(`
             WITH RECURSIVE timeline AS (

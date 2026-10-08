@@ -1,4 +1,4 @@
-The project implements a lightweight Warehouse Management System via an SQLite database.
+A lightweight warehouse management system for tracking a home food stockpile: expiration-based rotation, box-stack accessibility, and consumption analytics. Built on SQLite.
 
 # Features
 * **Item ranking:** Automated sorting based on expiration date, status, and physical accessibility (calculated by the weight of boxes obstructing the target item).
@@ -12,10 +12,11 @@ The project implements a lightweight Warehouse Management System via an SQLite d
 * **Frontend:** TypeScript, HTML5, CSS3
 
 ## Key Algorithms & Logic
-* **Data Pagination:** Heap data structure for pagination
+* **Data Pagination:** partial heapsort for top-N ranking
 * **Graph Traversal & Layout:** Transitive closure via topological sort and bitset union and 3 color DFS cycle finding algorithm for box layout [[1]](https://geekrope.github.io/wms/notes/build/main.pdf#section.5)
 * **Statistical Inference:** t-stat for conducting the statistical test for non-zero mean presence [[2]](https://geekrope.github.io/wms/notes/build/main.pdf#section.2)
-* **DSP:** First order Exponential Moving average with forward and backward filtration. Peak finding algorithm via monotonic stack [[3]](https://geekrope.github.io/wms/notes/build/main.pdf#section.6)
+* **DSP:** First order exponential moving average with forward and backward filtration. Peak finding algorithm via monotonic stack [[3]](https://geekrope.github.io/wms/notes/build/main.pdf#section.6)
+* **Data mining:** lift for tracking the co-occurring pairs accompanied by hierarchical clustering to aggregate into the most commonly added/removed groups
 
 **Live Demo:** [https://geekrope.github.io/wms/](https://geekrope.github.io/wms/)
 

@@ -4,8 +4,8 @@ type EdgeHierarical = { v: number, u: number, gen_v: number, gen_u: number, simi
 export type Merge = { v: number, u: number, similarity: number };
 
 // TODO: add tests
-// using average linkage, treat the graph as it 
-// was complete initializing the missing edges with zeros
+// using average linkage, treat the graph as if it 
+// were complete initializing the missing edges with zeros
 export function cluster(edges: { to: number, weight: number }[][]): Merge[] {
     const n = edges.length;
     const generation = new Array(n).fill(0);
@@ -21,12 +21,17 @@ export function cluster(edges: { to: number, weight: number }[][]): Merge[] {
         weights[v] = new Array(n).fill(0);
         sizes[v] = 1;
         for (let { to, weight } of edges[v]) {
-            if (v < to) {
-                queue.push({ v: v, u: to, gen_v: 0, gen_u: 0, similarity: weight });
-            }
             weights[v][to] = weight;
         }
     }
+
+    // add the zero edges as they may be more optimal then the negative ones, but do not show up in the queue
+    for (let v = 0; v < n; v++) {
+        for (let u = 0; u < n; u++) {
+            queue.push({ v: v, u: u, gen_v: 0, gen_u: 0, similarity: weights[v][u] });
+        }
+    }
+    
     heapify(queue, comparator);
 
     while (true) {
@@ -47,13 +52,11 @@ export function cluster(edges: { to: number, weight: number }[][]): Merge[] {
         const cluster_1 = Math.min(largest_edge.v, largest_edge.u);
         const cluster_2 = Math.max(largest_edge.v, largest_edge.u);
 
-        // the similarity is non-increasing since at each step 
-        // we take the edges greedily hence the freshly
-        // added edge cannot be greater than the previous ones
+        // TODO: why the similarity is non-increasing for non-negative edges
         merges.push({ v: cluster_1, u: cluster_2, similarity: largest_edge.similarity })
 
         // when we merge two clusters all the edges belonging to the second one are
-        // connected to the first one. hence the the total weight
+        // linked to the first one. hence the the total weight
         // grows by weights[cluster_2][i]
         for (let i = 0; i < n; i++) {
             weights[cluster_1][i] += weights[cluster_2][i];
@@ -73,7 +76,7 @@ export function cluster(edges: { to: number, weight: number }[][]): Merge[] {
         generation[cluster_2] = -1;
 
         for (let u = 0; u < n; u++) {
-            // count the edges between non-empty clusters
+            // push edges to all other non-empty clusters
             if (u != cluster_1 && generation[u] != -1 && sizes[cluster_1] > 0 && sizes[u] > 0) {
                 const v_min = Math.min(cluster_1, u);
                 const u_max = Math.max(cluster_1, u);
