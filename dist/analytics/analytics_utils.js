@@ -66,6 +66,7 @@ export class Analytics {
             ORDER BY date;`, (obj) => ({ date: obj.date, delta: obj.delta }), { ":category_id": category_id });
         return { dates: zipped.map((val) => val.date), deltas: zipped.map((val) => val.delta) };
     }
+    // fr timeline is filtered so that only the dates from items are left
     async get_activity(begin, end) {
         return await this.db_driver.query(`
             WITH RECURSIVE timeline AS (

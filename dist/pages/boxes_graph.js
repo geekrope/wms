@@ -110,7 +110,7 @@ export function render_box_graph(container, boxes, weights, adjacency) {
             }
         },
         physics: {
-            enabled: true,
+            enabled: false,
             hierarchicalRepulsion: {
                 nodeDistance: 150
             },

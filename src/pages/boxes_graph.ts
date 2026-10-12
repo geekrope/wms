@@ -131,7 +131,7 @@ export function render_box_graph(
             }
         },
         physics: {
-            enabled: true,
+            enabled: false,
             hierarchicalRepulsion: {
                 nodeDistance: 150
             },

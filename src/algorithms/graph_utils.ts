@@ -26,6 +26,7 @@ export class EntryNode<T> extends Node<T> {
 
 export type AdjacencyList<T = number> = { v: T, u: T }[];
 
+// TODO: Kahn algorithm
 function topological_sort_aux<T>(entry: Node<T>, result: Node<T>[], visited: Set<Node<T>>) {
     if (visited.has(entry)) return;
     visited.add(entry);

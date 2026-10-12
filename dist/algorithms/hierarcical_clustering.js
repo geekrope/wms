@@ -41,9 +41,7 @@ export function cluster(edges) {
         }
         const cluster_1 = Math.min(largest_edge.v, largest_edge.u);
         const cluster_2 = Math.max(largest_edge.v, largest_edge.u);
-        // the similarity is non-increasing since at each step 
-        // we take the edges greedily hence a newly
-        // added edge cannot be greater than the previous ones
+        // TODO: why the similarity is non-increasing for non-negative edges
         merges.push({ v: cluster_1, u: cluster_2, similarity: largest_edge.similarity });
         // when we merge two clusters all the edges belonging to the second one are
         // linked to the first one. hence the the total weight

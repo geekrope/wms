@@ -20,6 +20,7 @@ export class ValueNode extends Node {
 }
 export class EntryNode extends Node {
 }
+// TODO: Kahn algorithm
 function topological_sort_aux(entry, result, visited) {
     if (visited.has(entry))
         return;
