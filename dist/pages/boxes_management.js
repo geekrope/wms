@@ -7,11 +7,13 @@ import { heapify, partial_heapsort } from "../algorithms/heap.js";
 export class BoxElement {
     box;
     box_weight;
+    box_size;
     container;
     items_list_container;
-    constructor(box, box_weight, item_elements = []) {
+    constructor(box, box_weight, box_size, item_elements = []) {
         this.box = box;
         this.box_weight = box_weight;
+        this.box_size = box_size;
         this.container = document.createElement("div");
         this.container.className = "box-card";
         const header = document.createElement("div");
@@ -21,7 +23,7 @@ export class BoxElement {
         title.textContent = `📦 ${renderPattern("box")} ${box}, ${renderPattern("weight", { "weight": box_weight })}`;
         const badge = document.createElement("span");
         badge.className = "count-badge";
-        badge.textContent = renderPattern("box_item_count", { count: item_elements.length });
+        badge.textContent = renderPattern("box_item_count", { count: box_size });
         const deleteBtn = document.createElement("button");
         deleteBtn.className = "btn-danger icon-btn icon-btn-delete";
         deleteBtn.title = renderPattern("btn_delete");
@@ -222,7 +224,6 @@ export async function refresh_boxes_management() {
             return a.status > b.status;
         return a.expiration_date < b.expiration_date;
     };
-    let current_category = "";
     // Use heap for sorting items by date, status and lexicographicaly by category
     for (const box of boxes) {
         const total_weight = weight_map.get(box.title) ?? 0;
@@ -230,6 +231,7 @@ export async function refresh_boxes_management() {
         const item_elements = [];
         heapify(items, comparator);
         const sorted_items = partial_heapsort(items, items.length - 1, items.length, comparator).sorted;
+        let current_category = "";
         for (const item of sorted_items) {
             if (item.category !== current_category) {
                 current_category = item.category;
@@ -241,13 +243,13 @@ export async function refresh_boxes_management() {
             }
             item_elements.push(create_draggable_item_element(item));
         }
-        const box_el = new BoxElement(box.title, total_weight, item_elements);
+        const box_el = new BoxElement(box.title, total_weight, sorted_items.length, item_elements);
         boxes_container.appendChild(box_el.container);
     }
     await refresh_boxes_graph();
 }
 export function init_boxes_management() {
-    const form = new DynamicForm([
+    const box_form = new DynamicForm([
         {
             name: "boxTitle",
             type: "text",
@@ -268,6 +270,7 @@ export function init_boxes_management() {
             const manager = get_db_manager();
             await manager.add_boxes(box);
             await refresh_boxes_management();
+            box_form.reset();
             add_log_entry(renderPattern("log_add_box", { title }), "boxesLog");
         }
         catch (err) {
@@ -276,7 +279,7 @@ export function init_boxes_management() {
         }
     });
     const form_container = get_element("boxAddCard");
-    form_container.appendChild(form.form);
+    form_container.appendChild(box_form.form);
     add_log_entry(renderPattern("initial_log"), "boxesLog");
     document.addEventListener("dragover", (e) => {
         if (drag_autoscroll_active) {

@@ -12,6 +12,7 @@ export class BoxElement {
     constructor(
         public box: string,
         public box_weight: number,
+        public box_size: number,
         item_elements: HTMLElement[] = []
     ) {
         this.container = document.createElement("div");
@@ -26,7 +27,7 @@ export class BoxElement {
 
         const badge = document.createElement("span");
         badge.className = "count-badge";
-        badge.textContent = renderPattern("box_item_count", { count: item_elements.length });
+        badge.textContent = renderPattern("box_item_count", { count: box_size });
 
         const deleteBtn = document.createElement("button");
         deleteBtn.className = "btn-danger icon-btn icon-btn-delete";
@@ -271,7 +272,6 @@ export async function refresh_boxes_management(): Promise<void> {
         
         return a.expiration_date < b.expiration_date;
     }
-    let current_category = "";
     // Use heap for sorting items by date, status and lexicographicaly by category
     for (const box of boxes) {
         const total_weight = weight_map.get(box.title) ?? 0;
@@ -280,6 +280,7 @@ export async function refresh_boxes_management(): Promise<void> {
 
         heapify(items, comparator);
         const sorted_items = partial_heapsort(items, items.length - 1, items.length, comparator).sorted;
+        let current_category = "";
 
         for (const item of sorted_items) {
             if (item.category !== current_category) {
@@ -293,7 +294,7 @@ export async function refresh_boxes_management(): Promise<void> {
             item_elements.push(create_draggable_item_element(item));
         }
 
-        const box_el = new BoxElement(box.title, total_weight, item_elements);
+        const box_el = new BoxElement(box.title, total_weight, sorted_items.length, item_elements);
         boxes_container.appendChild(box_el.container);
     }
 
@@ -301,7 +302,7 @@ export async function refresh_boxes_management(): Promise<void> {
 }
 
 export function init_boxes_management(): void {
-    const form = new DynamicForm([
+    const box_form = new DynamicForm([
         {
             name: "boxTitle",
             type: "text",
@@ -325,6 +326,7 @@ export function init_boxes_management(): void {
                 await manager.add_boxes(box);
                 await refresh_boxes_management();
 
+                box_form.reset();
                 add_log_entry(renderPattern("log_add_box", { title }), "boxesLog");
             }
             catch (err) {
@@ -334,7 +336,7 @@ export function init_boxes_management(): void {
         });
         
     const form_container = get_element<HTMLDivElement>("boxAddCard");
-    form_container.appendChild(form.form);
+    form_container.appendChild(box_form.form);
 
     add_log_entry(renderPattern("initial_log"), "boxesLog");
 

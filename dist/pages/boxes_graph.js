@@ -175,7 +175,7 @@ export function render_weights_table(container, boxes, weights, adjacency) {
         td_box.textContent = `📦 ${renderPattern("box")} ${box.title}`;
         td_box.style.fontWeight = "600";
         const td_weight = document.createElement("td");
-        td_weight.textContent = `${total_weight} г`;
+        td_weight.textContent = renderPattern("weight", { weight: total_weight });
         const td_max_load = document.createElement("td");
         if (box.max_load === null) {
             td_max_load.textContent = renderPattern("no_limit");
