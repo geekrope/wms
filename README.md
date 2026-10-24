@@ -13,9 +13,9 @@ A lightweight warehouse management system for tracking a home food stockpile: ex
 
 ## Key Algorithms & Logic
 * **Data Pagination:** partial heapsort for top-N ranking
-* **Graph Traversal & Layout:** Transitive closure via topological sort and bitset union and 3 color DFS cycle finding algorithm for box layout [[1]](https://geekrope.github.io/wms/notes/build/main.pdf#section.5)
-* **Statistical Inference:** t-stat for conducting the statistical test for non-zero mean presence [[2]](https://geekrope.github.io/wms/notes/build/main.pdf#section.2)
-* **DSP:** First order exponential moving average with forward and backward filtration. Peak finding algorithm via monotonic stack [[3]](https://geekrope.github.io/wms/notes/build/main.pdf#section.6)
+* **Graph Traversal & Layout:** Transitive closure via topological sort and bitset union and 3 color DFS cycle finding algorithm for box layout
+* **Statistical Inference:** t-stat for conducting the statistical test for non-zero mean presence [[1]](https://geekrope.github.io/wms/notes/build/main.pdf#section.2)
+* **DSP:** First order exponential moving average with forward and backward filtration. Peak finding algorithm via monotonic stack [[2]](https://geekrope.github.io/wms/notes/build/main.pdf#section.5)
 * **Data mining:** lift for tracking the co-occurring pairs accompanied by hierarchical clustering to aggregate into the most commonly added/removed groups
 
 **Live Demo:** [https://geekrope.github.io/wms/](https://geekrope.github.io/wms/)
