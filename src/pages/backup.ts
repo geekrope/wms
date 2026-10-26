@@ -1,4 +1,4 @@
-import { LocalFileAdapter, IndexedDbAdapter } from "../core/persistence.js";
+import { LocalFileAdapter, IndexedDbAdapter } from "../core/persistence_browser.js";
 import type { IPersistenceAdapter } from "../core/persistence.js";
 import { add_log_entry, get_element } from "../core/dom_utils.js";
 import { renderPattern } from "../core/vocab.js";

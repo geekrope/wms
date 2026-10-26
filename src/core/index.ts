@@ -1,6 +1,6 @@
 import { SqlJsDriver } from "./db_driver.js";
 import { DatabaseManager } from "./main.js";
-import { IndexedDbAdapter } from "./persistence.js";
+import { IndexedDbAdapter } from "./persistence_browser.js";
 import { init_intake, refresh_intake } from "../pages/intake.js";
 import { init_item_management, refresh_item_management } from "../pages/item_management.js";
 import { init_backup } from "../pages/backup.js";
@@ -15,12 +15,6 @@ import { type Category, type Box } from "./types.js";
 //TODO: edit box names, category names and their properties
 //TODO: DI - make this file the composition root: build db_manager and the categories/boxes cache here and pass them
 //      to init_* as a context object, so pages/analytics/boxes_graph stop importing index.ts back (removes the import cycles)
-
-declare global {
-    interface Window {
-        initSqlJs: (config?: any) => Promise<any>;
-    }
-}
 
 type Page = "intake" | "item_management" | "boxes_management" | "category_management" | "backup" | "dashboard" | "stats";
 

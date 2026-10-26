@@ -3,8 +3,10 @@ import { locate_category } from "../core/index.js";
 import { get_analytics_object, analytics_category_input } from "./analytics_engine.js";
 import { stat_test, mean_test, qq } from "./linear_regression.js";
 import { get_element } from "../core/dom_utils.js";
+import type { PlotData, Datum } from "plotly.js";
 
-declare const Plotly: any;
+// @types/plotly.js lacks bar `base` and histogram `nbinsx`
+type Trace = Partial<PlotData> & { base?: Datum[], nbinsx?: number };
 
 const INCREASING_COLOR = "rgb(78, 159, 131)";
 const INCREASING_COLOR_MUTED = "rgba(78, 159, 131, 0.35)";
@@ -104,7 +106,7 @@ function build_bar_trace(dates: number[], deltas: number[], counts: number[], cu
             y: deltas,
             marker: { color: colors },
             showlegend: false
-        }
+        } satisfies Trace
     ];
 }
 
@@ -126,7 +128,7 @@ function build_shelves_trace(dates: number[], counts: number[]) {
         connectgaps: false,
         showlegend: false,
         hoverinfo: "skip"
-    }
+    } satisfies Trace;
 }
 
 function build_regression_trace(dates: number[], counts: number[], cutoff_idx: number) {
@@ -141,7 +143,7 @@ function build_regression_trace(dates: number[], counts: number[], cutoff_idx: n
         y: [regression.y1, regression.y2],
         line: { color: "rgb(0, 191, 255)", width: 2, dash: "solid" },
         showlegend: true
-    },
+    } satisfies Trace,
     {
         type: "scatter",
         mode: "lines",
@@ -150,7 +152,7 @@ function build_regression_trace(dates: number[], counts: number[], cutoff_idx: n
         y: [regression.y0, regression.y1],
         line: { color: "rgb(0, 191, 255)", width: 2, dash: "dash" },
         showlegend: true
-    }];
+    } satisfies Trace];
 }
 
 async function refresh_current_category(cutoff_slider: HTMLInputElement): Promise<void> {
@@ -213,7 +215,7 @@ function build_normal_pdf_trace(sigma: number) {
         y: x.map(xi => normal_pdf(xi, sigma)),
         line: { color: "rgb(10, 10, 10)", width: 2 },
         showlegend: true
-    };
+    } satisfies Trace;
 }
 
 function build_residuals_trace(residuals: number[]) {
@@ -225,7 +227,7 @@ function build_residuals_trace(residuals: number[]) {
         nbinsx: RESIDUALS_BIN_COUNT,
         marker: { color: "rgba(78, 159, 131, 0.55)" },
         showlegend: true
-    };
+    } satisfies Trace;
 }
 
 function build_qq_trace(residuals: number[], sigma: number) {
@@ -238,7 +240,7 @@ function build_qq_trace(residuals: number[], sigma: number) {
         y: qq_data.y,
         marker: { color: "rgba(194, 89, 104, 1)" },
         showlegend: true
-    };
+    } satisfies Trace;
 }
 
 function render_residuals_chart(container: HTMLElement, drift_test: DriftTest | undefined): void {

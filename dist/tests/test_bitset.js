@@ -21,6 +21,18 @@ test("test bitset or broadcasting", () => {
     assert.equal(or.read_bit(65), 0);
     assert.equal(or.read_bit(0), 0);
 });
+test("test bitset or commutativity", () => {
+    const shorter = new Bitset();
+    const longer = new Bitset();
+    shorter.set_bit(3);
+    shorter.set_bit(31); // sign bit of the shared page
+    longer.set_bit(3); // overlapping bit
+    longer.set_bit(40);
+    longer.set_bit(96);
+    // argument shorter than the receiver hits the other side of ?? 0
+    assert.deepEqual(shorter.or(longer).data, longer.or(shorter).data);
+    assert.deepEqual(longer.or(shorter).apply(Array(128).fill(0).map((_, i) => i)), [3, 31, 40, 96]);
+});
 test("test bitset apply", () => {
     const array = Array(32).fill(0).map((_, i) => i);
     const bitset = new Bitset();

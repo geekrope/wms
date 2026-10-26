@@ -1,12 +1,14 @@
-import type { IDatabaseDriver, SqlParams } from "./db_driver.js";
+import type { IDatabaseDriver } from "./db_driver.js";
 import { Item } from "./types.js";
 import { type Category, type Box } from "./types.js";
 import { type AdjacencyList } from "../algorithms/graph_utils.js";
+import type { BindParams } from "sql.js";
 export declare class DatabaseManager {
     private db_driver;
-    constructor(db_driver: IDatabaseDriver);
+    private now;
+    constructor(db_driver: IDatabaseDriver, now?: () => number);
     init_tables(): Promise<void>;
-    private id_lookup;
+    private static id_lookup;
     get_ids(table_name: string, ...titles: string[]): Promise<Map<string, number>>;
     private add_objects;
     private remove_object;
@@ -28,7 +30,7 @@ export declare class DatabaseManager {
     add_box_connections(adjacency: AdjacencyList): Promise<void>;
     remove_box_connection(v: number, u: number): Promise<void>;
     get_box_adjacency(): Promise<AdjacencyList>;
-    execute_raw(sql: string, params: SqlParams): Promise<any[]>;
-    run_raw(sql: string, params: SqlParams): Promise<void>;
+    execute_raw(sql: string, params: BindParams): Promise<import("sql.js").QueryExecResult[]>;
+    run_raw(sql: string, params: BindParams): Promise<void>;
 }
 //# sourceMappingURL=main.d.ts.map

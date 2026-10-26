@@ -13,6 +13,16 @@
     "rootDir": "./src",
     "esModuleInterop": true,
     "types": [],
+    // Vendored library declarations, see types/ and src/globals.d.ts
+    "typeRoots": ["./types"],
+    "paths": {
+      "plotly.js": ["./types/plotly.js/index.d.ts"],
+      "sql.js": ["./types/sql.js/index.d.ts"],
+      "vis-network/standalone": ["./types/vis-network/declarations/entry-standalone.d.ts"],
+      "vis-data/esnext": ["./types/vis-data/declarations/entry-esnext.d.ts"],
+      "vis-data": ["./types/vis-data/declarations/index.d.ts"],
+      "vis-util/esnext": ["./types/vis-util/declarations/entry-esnext.d.ts"]
+    },
     "allowJs": true,
     // For nodejs:
     // "lib": ["esnext"],

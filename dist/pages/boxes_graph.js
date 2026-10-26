@@ -120,6 +120,7 @@ export function render_box_graph(container, boxes, weights, adjacency) {
         },
         edges: {
             smooth: {
+                enabled: true,
                 type: "cubicBezier",
                 forceDirection: "vertical",
                 roundness: 0.5

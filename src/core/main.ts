@@ -1,14 +1,15 @@
-import type { IDatabaseDriver, SqlParams } from "./db_driver.js";
+import type { IDatabaseDriver } from "./db_driver.js";
 import { Item } from "./types.js";
 import { type Category, type Box } from "./types.js";
 import { type AdjacencyList } from "../algorithms/graph_utils.js";
+import type { BindParams } from "sql.js";
 
 //TODO: add hard delete for items for example for erroneous additions (wrong date)
 //TODO: named params
 //TODO: allow arbitrary date in add items
 
 export class DatabaseManager {
-    constructor(private db_driver: IDatabaseDriver) { }
+    constructor(private db_driver: IDatabaseDriver, private now: () => number = Date.now) { }
 
     public async init_tables(): Promise<void> {
         await this.db_driver.run(
@@ -47,7 +48,7 @@ export class DatabaseManager {
         );
     }
 
-    private async id_lookup(map: Map<string, number>, title: string): Promise<number> {
+    private static id_lookup(map: Map<string, number>, title: string): number {
         const id = map.get(title);
         if (id === undefined) {
             throw new Error(`The object with title "${title}" does not exist.`);
@@ -155,7 +156,7 @@ export class DatabaseManager {
             }
         }
 
-        const flattened_values = item.flatMap(i => [category_map.get(i.category), box_map.get(i.box), i.expiration_date, i.status, Date.now()]);
+        const flattened_values = item.flatMap(i => [category_map.get(i.category)!, box_map.get(i.box)!, i.expiration_date, i.status, this.now()]);
         const clause = item.map(() => "(?, ?, ?, ?, ?)").join(", ");
         await this.db_driver.run(
             `INSERT INTO items 
@@ -170,7 +171,7 @@ export class DatabaseManager {
             `UPDATE items
             SET remove_date = :date
             WHERE id = :id;`,
-            { ":date": Date.now(), ":id": id }
+            { ":date": this.now(), ":id": id }
         );
     }
 
@@ -180,12 +181,12 @@ export class DatabaseManager {
 
         if (category !== undefined) {
             const category_map = await this.get_ids("categories", category);
-            update_obj["category_id"] = await this.id_lookup(category_map, category);
+            update_obj["category_id"] = DatabaseManager.id_lookup(category_map, category);
         }
 
         if (box !== undefined) {
             const box_map = await this.get_ids("boxes", box);
-            update_obj["box_id"] = await this.id_lookup(box_map, box);
+            update_obj["box_id"] = DatabaseManager.id_lookup(box_map, box);
         }
 
         const entries = Object.entries(update_obj).filter(
@@ -297,11 +298,11 @@ export class DatabaseManager {
         return edges;
     }
 
-    public async execute_raw(sql: string, params: SqlParams): Promise<any[]> {
+    public async execute_raw(sql: string, params: BindParams) {
         return await this.db_driver.query_raw(sql, params);
     }
 
-    public async run_raw(sql: string, params: SqlParams): Promise<void> {
+    public async run_raw(sql: string, params: BindParams): Promise<void> {
         await this.db_driver.run(sql, params);
     }
 }

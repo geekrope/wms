@@ -1,10 +1,5 @@
 import { DatabaseManager } from "./main.js";
 import { type Category, type Box } from "./types.js";
-declare global {
-    interface Window {
-        initSqlJs: (config?: any) => Promise<any>;
-    }
-}
 type Page = "intake" | "item_management" | "boxes_management" | "category_management" | "backup" | "dashboard" | "stats";
 export declare function navigate_to(page: Page): Promise<void>;
 export declare function handle_navigation(): Promise<void>;

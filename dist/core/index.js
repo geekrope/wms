@@ -1,6 +1,6 @@
 import { SqlJsDriver } from "./db_driver.js";
 import { DatabaseManager } from "./main.js";
-import { IndexedDbAdapter } from "./persistence.js";
+import { IndexedDbAdapter } from "./persistence_browser.js";
 import { init_intake, refresh_intake } from "../pages/intake.js";
 import { init_item_management, refresh_item_management } from "../pages/item_management.js";
 import { init_backup } from "../pages/backup.js";

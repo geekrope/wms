@@ -1,7 +1,6 @@
 import { type RangeCount } from "./analytics_utils.js";
 import { get_analytics_object } from "./analytics_engine.js";
-
-declare const Plotly: any;
+import type { PlotData } from "plotly.js";
 
 type ExpirationBin = { label: string, color: string, begin?: number, end?: number };
 
@@ -45,7 +44,7 @@ function build_bins(now: Date): ExpirationBin[] {
     ];
 }
 
-function build_bin_trace(bin: ExpirationBin, categories: string[], counts: RangeCount[]): any {
+function build_bin_trace(bin: ExpirationBin, categories: string[], counts: RangeCount[]): Partial<PlotData> {
     const by_category = new Map(counts.map((row) => [row.category, row.count]));
 
     return {

@@ -1,7 +1,7 @@
 import { Item } from "../core/types.js";
 import { DatabaseManager } from "../core/main.js";
 import { SqlJsDriver } from "../core/db_driver.js";
-import type { IDatabaseDriver, SqlParams, Constructor } from "../core/db_driver.js";
+import type { IDatabaseDriver, Constructor } from "../core/db_driver.js";
 import { DummyPersistenceAdapter } from "../core/persistence.js";
 import { compute_costs, detect_cycle, build_graph, ValueNode } from "../algorithms/graph_utils.js";
 import type { Node, AdjacencyList } from "../algorithms/graph_utils.js";

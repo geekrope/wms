@@ -4,8 +4,6 @@ import { renderPattern } from "../core/vocab.js";
 import type { Box } from "../core/types.js";
 import { compute_costs, build_graph, detect_cycle, type AdjacencyList, type Node } from "../algorithms/graph_utils.js";
 
-declare const vis: any;
-
 let network_instance: any = null;
 
 async function add_edge(this: { adjacency: AdjacencyList, boxes: Box[], weights: Map<number, number> }, edgeData: any, callback: any): Promise<void> {
@@ -141,6 +139,7 @@ export function render_box_graph(
         },
         edges: {
             smooth: {
+                enabled: true,
                 type: "cubicBezier",
                 forceDirection: "vertical",
                 roundness: 0.5

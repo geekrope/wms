@@ -2,8 +2,7 @@ import { OpenMeteoProvider, MUNICH_LAT, MUNICH_LON, type EnvironmentData } from 
 import { filtfilt, EMA } from "../algorithms/biquad.js";
 import { find_peaks, type Peak } from "../algorithms/peaks.js";
 import { add_log_entry, get_element } from "../core/dom_utils.js";
-
-declare const Plotly: any;
+import type { PlotData } from "plotly.js";
 
 const CLIMATE_WINDOW_DAYS = 14;
 const TEMPERATURE_COLOR = "rgb(194, 89, 104)";
@@ -21,7 +20,7 @@ function negate_temperature(data: EnvironmentData): EnvironmentData {
     return { ...data, tmp: data.tmp.map((value) => -value) };
 }
 
-function build_temperature_trace(data: EnvironmentData, color: string, name: string): any {
+function build_temperature_trace(data: EnvironmentData, color: string, name: string): Partial<PlotData> {
     return {
         type: "scatter",
         mode: "lines",
@@ -43,7 +42,7 @@ function build_temperature_peaks_trace(data: EnvironmentData, peaks: Peak[]) {
             line: { color: '#95a5a6', dash: 'dot', width: 1 },
             showlegend: false,
             hoverinfo: 'skip'
-        };
+        } satisfies Partial<PlotData>;
     }),
     {
         x: peaks.map((peak) => {
@@ -56,7 +55,7 @@ function build_temperature_peaks_trace(data: EnvironmentData, peaks: Peak[]) {
         mode: 'markers',
         name: 'peaks',
         marker: { color: PEAK_COLOR, size: 9, symbol: 'circle', line: { color: '#fff', width: 1.5 } }
-    },
+    } satisfies Partial<PlotData>,
     {
         x: peaks.map((peak) => {
             return data.stamps[peak.highest_base];
@@ -68,7 +67,7 @@ function build_temperature_peaks_trace(data: EnvironmentData, peaks: Peak[]) {
         mode: 'markers',
         name: 'peaks',
         marker: { color: '#95a5a6', size: 6, symbol: 'circle', line: { color: '#fff', width: 1 } }
-    }];
+    } satisfies Partial<PlotData>];
 }
 
 function format_stamp(stamp: Date): string {

@@ -6,8 +6,10 @@ import {} from "../algorithms/graph_utils.js";
 //TODO: allow arbitrary date in add items
 export class DatabaseManager {
     db_driver;
-    constructor(db_driver) {
+    now;
+    constructor(db_driver, now = Date.now) {
         this.db_driver = db_driver;
+        this.now = now;
     }
     async init_tables() {
         await this.db_driver.run(`CREATE TABLE IF NOT EXISTS categories (
@@ -37,7 +39,7 @@ export class DatabaseManager {
             FOREIGN KEY (u) REFERENCES boxes(id),
             PRIMARY KEY (v, u));`);
     }
-    async id_lookup(map, title) {
+    static id_lookup(map, title) {
         const id = map.get(title);
         if (id === undefined) {
             throw new Error(`The object with title "${title}" does not exist.`);
@@ -115,7 +117,7 @@ export class DatabaseManager {
                 throw new Error(`Box "${i.box}" does not exist.`);
             }
         }
-        const flattened_values = item.flatMap(i => [category_map.get(i.category), box_map.get(i.box), i.expiration_date, i.status, Date.now()]);
+        const flattened_values = item.flatMap(i => [category_map.get(i.category), box_map.get(i.box), i.expiration_date, i.status, this.now()]);
         const clause = item.map(() => "(?, ?, ?, ?, ?)").join(", ");
         await this.db_driver.run(`INSERT INTO items 
             (category_id, box_id, expiration_date, status, add_date) 
@@ -124,18 +126,18 @@ export class DatabaseManager {
     async remove_item(id) {
         await this.db_driver.run(`UPDATE items
             SET remove_date = :date
-            WHERE id = :id;`, { ":date": Date.now(), ":id": id });
+            WHERE id = :id;`, { ":date": this.now(), ":id": id });
     }
     async update_item(id, args) {
         const { category, box, id: _id, ...rest } = args;
         const update_obj = { ...rest };
         if (category !== undefined) {
             const category_map = await this.get_ids("categories", category);
-            update_obj["category_id"] = await this.id_lookup(category_map, category);
+            update_obj["category_id"] = DatabaseManager.id_lookup(category_map, category);
         }
         if (box !== undefined) {
             const box_map = await this.get_ids("boxes", box);
-            update_obj["box_id"] = await this.id_lookup(box_map, box);
+            update_obj["box_id"] = DatabaseManager.id_lookup(box_map, box);
         }
         const entries = Object.entries(update_obj).filter(([_, val]) => val !== undefined);
         if (entries.length === 0)
