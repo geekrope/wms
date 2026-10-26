@@ -4,7 +4,7 @@ export class Bitset {
         this.data = data;
     }
     read_bit(index) {
-        return this.data[index >> 5] & (1 << (index % 32));
+        return Number((this.data[index >> 5] & (1 << (index % 32))) != 0);
     }
     set_bit(index) {
         const at = index >> 5;

@@ -1,0 +1,27 @@
+name: tests
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Same versions as the local setup
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.14.1"
+
+      # Global tsc on the runner, like locally; the repo itself stays npm-free
+      - run: npm install -g typescript@6.0.2
+
+      - name: Browser build
+        run: tsc -p tsconfig.json --noEmit
+
+      - name: Node tests
+        shell: pwsh
+        run: ./run_tests.ps1 -c

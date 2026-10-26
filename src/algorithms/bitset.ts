@@ -2,7 +2,7 @@ export class Bitset {
     constructor(public data: number[] = []) { }
 
     public read_bit(index: number) {
-        return this.data[index >> 5] & (1 << (index % 32));
+        return Number((this.data[index >> 5] & (1 << (index % 32))) != 0);
     }
 
     public set_bit(index : number)

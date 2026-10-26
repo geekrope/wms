@@ -53,5 +53,8 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true
-  }
+  },
+  // Node tests (src/tests/test_*.ts) build via src/tests/tsconfig.json
+  "include": ["src"],
+  "exclude": ["src/tests/test_*.ts"]
 }

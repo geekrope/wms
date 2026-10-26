@@ -1,0 +1,16 @@
+{
+  // Node test build: tsc -p src/tests && node --test "dist/tests/test_*.js"
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    // No DOM: code reachable from tests must be pure
+    "lib": ["ES2022"],
+    // Vendored @types/node, see types/
+    "typeRoots": ["../../types"],
+    "types": ["node"],
+    "paths": {
+      "undici-types": ["../../types/undici-types/index.d.ts"]
+    }
+  },
+  "include": ["test_*.ts"],
+  "exclude": []
+}
