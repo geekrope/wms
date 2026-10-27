@@ -1,20 +1,20 @@
 export declare function stat_test(X: number[][], y: number[][]): {
-    beta: any;
-    t_stats: any;
-    p_left: any;
-    p_right: any;
-    p_double: any;
-    rss: any;
-    residuals: any;
-    sigma: any;
+    beta: number[][];
+    t_stats: number[];
+    p_left: number[];
+    p_right: number[];
+    p_double: number[];
+    rss: number;
+    residuals: number[][];
+    sigma: number;
 };
 export declare function mean_test(x: number[]): {
-    mean: any;
+    mean: number;
     t_stat: number;
     p_left: number;
     p_right: number;
     residuals: number[];
-    sigma: any;
+    sigma: number;
 };
 export declare function qq(residuals: number[], sigma: number): {
     x: number[];

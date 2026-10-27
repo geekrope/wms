@@ -3,10 +3,16 @@ import { get_db_manager, get_boxes_list } from "../core/index.js";
 import { renderPattern } from "../core/vocab.js";
 import type { Box } from "../core/types.js";
 import { compute_costs, build_graph, detect_cycle, type AdjacencyList, type Node } from "../algorithms/graph_utils.js";
+import type { DataSet, Edge, IdType, Network, Node as VisNode, Options } from "vis-network/standalone";
 
-let network_instance: any = null;
+// vis-network types `manipulation` as any, these follow its docs
+type EdgeCallback = (edge: Edge | null) => void;
+type DeleteSelection = { nodes: IdType[], edges: IdType[] };
 
-async function add_edge(this: { adjacency: AdjacencyList, boxes: Box[], weights: Map<number, number> }, edgeData: any, callback: any): Promise<void> {
+let network_instance: Network | null = null;
+let edges_set: DataSet<Edge> | null = null;
+
+async function add_edge(this: { adjacency: AdjacencyList, boxes: Box[], weights: Map<number, number> }, edgeData: Edge, callback: EdgeCallback): Promise<void> {
     const v = Number(edgeData.from);
     const u = Number(edgeData.to);
 
@@ -34,16 +40,16 @@ async function add_edge(this: { adjacency: AdjacencyList, boxes: Box[], weights:
     }
 }
 
-async function delete_edge(edgeData: any, callback: any) {
+async function delete_edge(selection: DeleteSelection, callback: (selection: DeleteSelection | null) => void) {
     try {
-        for (const edgeId of edgeData.edges) {
-            const edge = network_instance.body.data.edges.get(edgeId);
+        for (const edgeId of selection.edges) {
+            const edge = edges_set?.get(edgeId);
             if (edge) {
                 await get_db_manager().remove_box_connection(Number(edge.from), Number(edge.to));
             }
         }
         await refresh_boxes_graph();
-        callback(edgeData);
+        callback(selection);
     } catch (err) {
         console.error("An error occurred while deleting the edge:", err);
         callback(null);
@@ -71,7 +77,7 @@ export function render_box_graph(
     const { entry, nodes: graph_nodes } = build_graph(box_ids, adjacency);
     const access_scores = compute_costs(entry, weights);
 
-    const nodes: any[] = box_ids.map(id => {
+    const nodes: VisNode[] = box_ids.map(id => {
         const weight = weights.get(id) ?? 0;
         const box_node = graph_nodes.get(id);
         const access_cost = (box_node && access_scores.get(box_node)) ?? 0;
@@ -85,7 +91,7 @@ export function render_box_graph(
                 cost: access_cost
             }),
             shape: "box",
-            margin: 10,
+            margin: { top: 10, right: 10, bottom: 10, left: 10 },
             color: {
                 background: is_root ? "#27ae60" : "#3498db",
                 border: is_root ? "#1e8449" : "#2980b9",
@@ -103,7 +109,7 @@ export function render_box_graph(
         };
     });
 
-    const edges: { from: number, to: number, label?: string, arrows: string, color?: any }[] = [];
+    const edges: Edge[] = [];
     const all_nodes_set = new Set<number>(box_ids);
     for (const { v, u } of adjacency) {
         if (all_nodes_set.has(v) && all_nodes_set.has(u)) {
@@ -116,12 +122,13 @@ export function render_box_graph(
         }
     }
 
-    const data = { nodes, edges };
-    const empty_handler = (_param: any, callback: any) => {
+    edges_set = new vis.DataSet<Edge>(edges);
+    const data = { nodes, edges: edges_set };
+    const empty_handler = (_edge: Edge, callback: EdgeCallback) => {
         callback(null);
         console.log(false, "This handler is disabled");
     }
-    const options = {
+    const options: Options = {
         layout: {
             hierarchical: {
                 enabled: true,

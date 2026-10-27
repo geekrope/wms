@@ -3,6 +3,7 @@ import { get_db_manager, get_boxes_list } from "../core/index.js";
 import { renderPattern } from "../core/vocab.js";
 import { compute_costs, build_graph, detect_cycle } from "../algorithms/graph_utils.js";
 let network_instance = null;
+let edges_set = null;
 async function add_edge(edgeData, callback) {
     const v = Number(edgeData.from);
     const u = Number(edgeData.to);
@@ -27,16 +28,16 @@ async function add_edge(edgeData, callback) {
         callback(null);
     }
 }
-async function delete_edge(edgeData, callback) {
+async function delete_edge(selection, callback) {
     try {
-        for (const edgeId of edgeData.edges) {
-            const edge = network_instance.body.data.edges.get(edgeId);
+        for (const edgeId of selection.edges) {
+            const edge = edges_set?.get(edgeId);
             if (edge) {
                 await get_db_manager().remove_box_connection(Number(edge.from), Number(edge.to));
             }
         }
         await refresh_boxes_graph();
-        callback(edgeData);
+        callback(selection);
     }
     catch (err) {
         console.error("An error occurred while deleting the edge:", err);
@@ -68,7 +69,7 @@ export function render_box_graph(container, boxes, weights, adjacency) {
                 cost: access_cost
             }),
             shape: "box",
-            margin: 10,
+            margin: { top: 10, right: 10, bottom: 10, left: 10 },
             color: {
                 background: is_root ? "#27ae60" : "#3498db",
                 border: is_root ? "#1e8449" : "#2980b9",
@@ -97,8 +98,9 @@ export function render_box_graph(container, boxes, weights, adjacency) {
             });
         }
     }
-    const data = { nodes, edges };
-    const empty_handler = (_param, callback) => {
+    edges_set = new vis.DataSet(edges);
+    const data = { nodes, edges: edges_set };
+    const empty_handler = (_edge, callback) => {
         callback(null);
         console.log(false, "This handler is disabled");
     };

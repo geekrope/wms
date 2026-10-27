@@ -148,9 +148,10 @@ async function execute_read_query(): Promise<void> {
         }
 
         add_log_entry(`Read query success (${elapsed} ms)`, "dashboardLog");
-    } catch (err: any) {
-        render_status(resultsContainer, `Error: ${err.message || String(err)}`, true);
-        add_log_entry(`Query error: ${err.message || String(err)}`, "dashboardLog", true);
+    } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        render_status(resultsContainer, `Error: ${message}`, true);
+        add_log_entry(`Query error: ${message}`, "dashboardLog", true);
     }
 }
 
@@ -175,8 +176,9 @@ async function execute_mutation_query(): Promise<void> {
 
         render_status(statusContainer, `Mutation executed and saved in ${elapsed} ms. Foreign keys enforced.`, false);
         add_log_entry(`Mutation success (${elapsed} ms): ${sql.substring(0, 60)}...`, "dashboardLog");
-    } catch (err: any) {
-        render_status(statusContainer, `Execution failed: ${err.message || String(err)}`, true);
-        add_log_entry(`Mutation error: ${err.message || String(err)}`, "dashboardLog", true);
+    } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        render_status(statusContainer, `Execution failed: ${message}`, true);
+        add_log_entry(`Mutation error: ${message}`, "dashboardLog", true);
     }
 }

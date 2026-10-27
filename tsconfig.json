@@ -21,7 +21,10 @@
       "vis-network/standalone": ["./types/vis-network/declarations/entry-standalone.d.ts"],
       "vis-data/esnext": ["./types/vis-data/declarations/entry-esnext.d.ts"],
       "vis-data": ["./types/vis-data/declarations/index.d.ts"],
-      "vis-util/esnext": ["./types/vis-util/declarations/entry-esnext.d.ts"]
+      "vis-util/esnext": ["./types/vis-util/declarations/entry-esnext.d.ts"],
+      "mathjs": ["./types/mathjs/index.d.ts"],
+      "decimal.js": ["./types/decimal.js/decimal.d.ts"],
+      "fraction.js": ["./types/fraction.js/fraction.d.mts"]
     },
     "allowJs": true,
     // For nodejs:

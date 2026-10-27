@@ -127,8 +127,9 @@ async function execute_read_query() {
         add_log_entry(`Read query success (${elapsed} ms)`, "dashboardLog");
     }
     catch (err) {
-        render_status(resultsContainer, `Error: ${err.message || String(err)}`, true);
-        add_log_entry(`Query error: ${err.message || String(err)}`, "dashboardLog", true);
+        const message = err instanceof Error ? err.message : String(err);
+        render_status(resultsContainer, `Error: ${message}`, true);
+        add_log_entry(`Query error: ${message}`, "dashboardLog", true);
     }
 }
 // TODO: Commit the state and add rollback functionality for mutation queries.
@@ -150,8 +151,9 @@ async function execute_mutation_query() {
         add_log_entry(`Mutation success (${elapsed} ms): ${sql.substring(0, 60)}...`, "dashboardLog");
     }
     catch (err) {
-        render_status(statusContainer, `Execution failed: ${err.message || String(err)}`, true);
-        add_log_entry(`Mutation error: ${err.message || String(err)}`, "dashboardLog", true);
+        const message = err instanceof Error ? err.message : String(err);
+        render_status(statusContainer, `Execution failed: ${message}`, true);
+        add_log_entry(`Mutation error: ${message}`, "dashboardLog", true);
     }
 }
 //# sourceMappingURL=dashboard.js.map

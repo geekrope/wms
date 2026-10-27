@@ -1,6 +1,3 @@
-declare const math: any;
-declare const Statistics: any;
-
 //TODO: migrate to another library, this one outputs 1.14 cdf for t=0.15 with df=44, which is abolute nonsense
 
 export function stat_test(X: number[][], y: number[][]) {
@@ -13,8 +10,8 @@ export function stat_test(X: number[][], y: number[][]) {
     const rss = math.multiply(math.transpose(residuals), residuals)[0][0];
     const sigma_sqr = rss / (n - d);
 
-    const std_err = math.multiply(sigma_sqr, math.inv(math.multiply(math.transpose(X), X)));
-    const t_stats = beta.map((coef: number[], index: number) => coef[0] / math.sqrt(std_err[index][index]));
+    const std_err = math.multiply(sigma_sqr, math.inv(math.multiply(math.transpose(X), X))) as number[][];
+    const t_stats = beta.map((coef: number[], index: number) => coef[0] / (math.sqrt(std_err[index][index]) as number));
 
     const stats = new Statistics([], [], {});
     const p_left = t_stats.map((t: number) => stats.studentsTCumulativeValue(t, n - d));
@@ -29,7 +26,7 @@ export function stat_test(X: number[][], y: number[][]) {
         p_double: p_double,
         rss: rss,
         residuals: residuals,
-        sigma: math.sqrt(sigma_sqr)
+        sigma: math.sqrt(sigma_sqr) as number
     };
 }
 
@@ -37,8 +34,8 @@ export function mean_test(x: number[]) {
     const n = x.length;
     const mean = math.mean(x);
     const centered = x.map((value: number) => value - mean);
-    const sigma_sqr = math.multiply(math.transpose(centered), centered) / (n - 1);
-    const std_err = math.sqrt(sigma_sqr / n); // design matrix column 1 vector, thus X^TX = n, (X^TX)^-1 = 1/n
+    const sigma_sqr = (math.multiply(math.transpose(centered), centered) as number) / (n - 1);
+    const std_err = math.sqrt(sigma_sqr / n) as number; // design matrix column 1 vector, thus X^TX = n, (X^TX)^-1 = 1/n
     const t_stat = mean / std_err;
 
     const stats = new Statistics([], [], {});
@@ -51,7 +48,7 @@ export function mean_test(x: number[]) {
         p_left: p_left,
         p_right: p_right,
         residuals: centered,
-        sigma: math.sqrt(sigma_sqr)
+        sigma: math.sqrt(sigma_sqr) as number
     };
 }
 

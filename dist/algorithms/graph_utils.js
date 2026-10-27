@@ -29,7 +29,7 @@ function topological_sort_aux(entry, result, visited) {
     }
     result.push(entry);
 }
-function topological_sort(entry, method = "kahn") {
+export function topological_sort(entry, method = "kahn") {
     if (method == "recursive") {
         const result = [];
         topological_sort_aux(entry, result, new Set());
@@ -90,9 +90,11 @@ function union(a, b) {
     return result;
 }
 // same algorithm used in networkx library in python
-function transitive_closure(entry, union_method = "bitset") {
+export function transitive_closure(entry, union_method = "bitset", sort_method = "kahn") {
+    // need to keep the order so that two-pointer union works properly
+    // for bitset it is redundant
     const closure = new Map();
-    const order = topological_sort(entry);
+    const order = topological_sort(entry, sort_method);
     if (union_method == "two-pointer") {
         for (const [idx, node] of order) {
             closure.set(node, [[idx, node]]);
