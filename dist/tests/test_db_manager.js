@@ -21,7 +21,7 @@ async function scalar(manager, sql, params = []) {
     return (await manager.execute_raw(sql, params))[0]?.values[0]?.[0];
 }
 async function live_id(manager, table, title) {
-    return (await manager.get_ids(table, title)).get(title);
+    return (await manager.get_active_ids(table, title)).get(title);
 }
 // categories: Tuna 200, Milk 1000, Salt (no weight), Corned beef 340 (no items)
 // boxes: Top -> Middle -> Bottom
@@ -30,7 +30,7 @@ async function create_fixture(now = Date.now) {
     const manager = await create_manager(now);
     await manager.add_categories({ id: undefined, title: "Tuna", weight: 200 }, { id: undefined, title: "Milk", weight: 1000 }, { id: undefined, title: "Salt", weight: null }, { id: undefined, title: "Corned beef", weight: 340 });
     await manager.add_boxes({ id: undefined, title: "Top", max_load: null }, { id: undefined, title: "Middle", max_load: null }, { id: undefined, title: "Bottom", max_load: null });
-    const boxes = await manager.get_ids("boxes", "Top", "Middle", "Bottom");
+    const boxes = await manager.get_active_ids("boxes", "Top", "Middle", "Bottom");
     await manager.add_box_connections([
         { v: boxes.get("Top"), u: boxes.get("Middle") },
         { v: boxes.get("Middle"), u: boxes.get("Bottom") }
@@ -64,11 +64,11 @@ test("revive category does not affect old entries", async () => {
     const manager = await create_fixture();
     await manager.remove_category("Corned beef");
     await manager.add_categories({ id: undefined, title: "Corned beef", weight: 400 });
-    const old_count = scalar(manager, `
+    const old_count = await scalar(manager, `
         SELECT COUNT(*) 
         FROM categories 
         WHERE title = 'Corned beef' AND weight = 340 AND DELETED = 1`, []);
-    const new_count = scalar(manager, `
+    const new_count = await scalar(manager, `
         SELECT COUNT(*) 
         FROM categories 
         WHERE title = 'Corned beef' AND weight = 400 AND DELETED = 0`, []);
@@ -85,14 +85,6 @@ test("live id points to the existing object", async () => {
         FROM categories 
         WHERE id = ?`, [id]);
     assert.equal(deleted_status, 0);
-});
-test("re-adding a removed category creates a new row", async () => {
-    const manager = await create_fixture();
-    const old_id = await live_id(manager, "categories", "Corned beef");
-    await manager.remove_category("Corned beef");
-    await manager.add_categories({ id: undefined, title: "Corned beef", weight: 400 });
-    assert.notEqual(await live_id(manager, "categories", "Corned beef"), old_id);
-    assert.deepEqual((await manager.get_categories()).filter(c => c.title === "Corned beef").map(c => c.weight), [400]);
 });
 test("add_items and update_item link to the live row of a re-added category", async () => {
     const manager = await create_fixture();
@@ -129,10 +121,19 @@ test("removing a re-added box deletes only its own edges", async () => {
     assert.equal(edges.length, 2);
     assert.ok(!edges.some(e => e.v === spare || e.u === spare));
 });
+test("a box whose removal is rejected keeps its edges", async () => {
+    const manager = await create_fixture();
+    await assert.rejects(() => manager.remove_box("Top"), /linked to existing items/);
+    assert.equal((await manager.get_box_adjacency()).length, 2);
+});
 test("removing a title that doesn't exist throws", async () => {
     const manager = await create_fixture();
     await assert.rejects(() => manager.remove_category("Ghost"));
     await assert.rejects(() => manager.remove_box("Ghost"));
+});
+test("removing a category that links to exiting item", async () => {
+    const manager = await create_fixture();
+    await assert.rejects(() => manager.remove_category("Tuna"));
 });
 test("removing an already removed title throws", async () => {
     const manager = await create_fixture();
@@ -146,4 +147,13 @@ test("duplicate titles in one call are rejected and nothing is inserted", async 
     assert.equal(await scalar(manager, "SELECT COUNT(*) FROM categories WHERE title = 'Rice';"), 0);
     assert.equal(await scalar(manager, "SELECT COUNT(*) FROM boxes WHERE title = 'Shelf';"), 0);
 });
+for (const [table, title] of [["categories", "Tuna"], ["boxes", "Top"]]) {
+    test(`database creates unique index on ${table} titles`, async () => {
+        const manager = await create_fixture();
+        await assert.rejects(() => manager.run_raw(`INSERT INTO ${table} (title) VALUES (?);`, [title]), /UNIQUE constraint failed/);
+        // check that removed categories are unaffected
+        await manager.run_raw(`UPDATE ${table} SET deleted = 1 WHERE title = ?;`, [title]);
+        await manager.run_raw(`INSERT INTO ${table} (title) VALUES (?);`, [title]);
+    });
+}
 //# sourceMappingURL=test_db_manager.js.map

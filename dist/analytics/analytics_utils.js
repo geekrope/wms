@@ -6,7 +6,7 @@ export class Analytics {
         this.manager = manager;
     }
     async resolve_category_id(category) {
-        const id = (await this.manager.get_ids("categories", category)).get(category);
+        const id = (await this.manager.get_active_ids("categories", category)).get(category);
         if (id === undefined)
             throw new Error(`Category "${category}" not found`);
         return id;
@@ -28,7 +28,7 @@ export class Analytics {
                 ELSE 0 
             END AS streak
             FROM lagged
-            WHERE date IS NOT prev_exp;`, (obj) => Number(obj.streak));
+            WHERE date IS NOT prev_exp;`, (obj) => Number(obj["streak"]));
     }
     async get_max_past_streak() {
         return await this.db_driver.query(`WITH activity AS (
@@ -47,7 +47,7 @@ export class Analytics {
             )
             SELECT start, MAX(CAST(julianday(end) - julianday(start) AS INTEGER)) AS streak
             FROM intervals;`, (obj) => {
-            return { value: Number(obj.streak), start: new Date(obj.start) };
+            return { value: Number(obj["streak"]), start: new Date(obj["start"]) };
         });
     }
     async get_category_events(category) {
@@ -63,7 +63,7 @@ export class Analytics {
             SELECT MAX(date) as date, SUM(delta) AS delta
             FROM raw as R
             GROUP BY date(R.date / 1000, 'unixepoch')
-            ORDER BY date;`, (obj) => ({ date: obj.date, delta: obj.delta }), { ":category_id": category_id });
+            ORDER BY date;`, (obj) => ({ date: obj["date"], delta: obj["delta"] }), { ":category_id": category_id });
         return { dates: zipped.map((val) => val.date), deltas: zipped.map((val) => val.delta) };
     }
     // fr timeline is filtered so that only the dates from items are left
@@ -80,7 +80,7 @@ export class Analytics {
             FROM timeline AS T
             JOIN items AS I ON date(I.remove_date / 1000, 'unixepoch') = T.date
             GROUP BY T.date
-            ORDER BY T.date;`, (obj) => ({ date: new Date(`${obj.date}T00:00:00Z`), count: obj.count }), { ":begin": begin, ":end": end });
+            ORDER BY T.date;`, (obj) => ({ date: new Date(`${obj["date"]}T00:00:00Z`), count: obj["count"] }), { ":begin": begin, ":end": end });
     }
     async get_counts(begin, end) {
         let params;
@@ -107,7 +107,7 @@ export class Analytics {
                 WHERE ${where_clause}
                 GROUP BY C.title
                 HAVING count > 0
-                ORDER BY count DESC;`, (obj) => { return { category: obj.title, count: obj.count }; }, params);
+                ORDER BY count DESC;`, (obj) => { return { category: obj['title'], count: obj['count'] }; }, params);
     }
     // compute P(A cap B) / (P(A) * P(B)). if the events are
     // completely random P(A cap B) = P(A) * P(B) hence lift is close to 1
@@ -141,7 +141,7 @@ export class Analytics {
             SELECT l.lift, c1.title as title1, c2.title as title2
             FROM lift AS l
             JOIN categories AS c1 ON l.cat1 = c1.id
-            JOIN categories AS c2 ON l.cat2 = c2.id`, (obj) => { return { title1: obj.title1, title2: obj.title2, lift: obj.lift }; }, [threshold]);
+            JOIN categories AS c2 ON l.cat2 = c2.id`, (obj) => { return { title1: obj['title1'], title2: obj['title2'], lift: obj['lift'] }; }, [threshold]);
     }
 }
 //# sourceMappingURL=analytics_utils.js.map

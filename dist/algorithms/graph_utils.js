@@ -20,7 +20,6 @@ export class ValueNode extends Node {
 }
 export class EntryNode extends Node {
 }
-// TODO: Kahn algorithm
 function topological_sort_aux(entry, result, visited) {
     if (visited.has(entry))
         return;
@@ -30,10 +29,34 @@ function topological_sort_aux(entry, result, visited) {
     }
     result.push(entry);
 }
-function topological_sort(entry) {
-    const result = [];
-    topological_sort_aux(entry, result, new Set());
-    return result.reverse().map((value, index) => [index, value]);
+function topological_sort(entry, method = "kahn") {
+    if (method == "recursive") {
+        const result = [];
+        topological_sort_aux(entry, result, new Set());
+        return result.reverse().map((value, index) => [index, value]);
+    }
+    else {
+        const in_degree = new Map();
+        const queue = [entry];
+        let head = 0;
+        in_degree.set(entry, 0);
+        while (head < queue.length) {
+            const top = queue[head];
+            head++;
+            for (const child of top.successors) {
+                if (in_degree.has(child)) {
+                    in_degree.set(child, in_degree.get(child) - 1);
+                }
+                else {
+                    in_degree.set(child, child.predecessors.size - 1);
+                }
+                if (in_degree.get(child) == 0) {
+                    queue.push(child);
+                }
+            }
+        }
+        return queue.map((value, index) => [index, value]);
+    }
 }
 function union(a, b) {
     let ptr1 = 0;

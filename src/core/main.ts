@@ -2,10 +2,9 @@ import type { IDatabaseDriver } from "./db_driver.js";
 import { Item } from "./types.js";
 import { type Category, type Box } from "./types.js";
 import { type AdjacencyList } from "../algorithms/graph_utils.js";
-import type { BindParams } from "sql.js";
+import type { BindParams, SqlValue } from "sql.js";
 
 //TODO: add hard delete for items for example for erroneous additions (wrong date)
-//TODO: named params
 //TODO: allow arbitrary date in add items
 
 export class DatabaseManager {
@@ -15,14 +14,14 @@ export class DatabaseManager {
         await this.db_driver.run(
             `CREATE TABLE IF NOT EXISTS categories (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL UNIQUE CHECK(length(trim(title)) > 0),
+            title TEXT NOT NULL CHECK(length(trim(title)) > 0),
             weight REAL DEFAULT NULL,
             deleted BOOLEAN NOT NULL DEFAULT 0);`
         );
         await this.db_driver.run(
             `CREATE TABLE IF NOT EXISTS boxes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL UNIQUE CHECK(length(trim(title)) > 0),
+            title TEXT NOT NULL CHECK(length(trim(title)) > 0),
             max_load INTEGER DEFAULT NULL,
             deleted BOOLEAN NOT NULL DEFAULT 0);`
         );
@@ -46,6 +45,14 @@ export class DatabaseManager {
             FOREIGN KEY (u) REFERENCES boxes(id),
             PRIMARY KEY (v, u));`
         );
+
+        for (const table of ["categories", "boxes"]) {
+            await this.db_driver.run(
+                `CREATE UNIQUE INDEX IF NOT EXISTS ${table}_live_title
+                ON ${table} (title)
+                WHERE deleted = 0`
+            );
+        }
     }
 
     private static id_lookup(map: Map<string, number>, title: string): number {
@@ -56,7 +63,7 @@ export class DatabaseManager {
         return id;
     }
 
-    public async get_ids(table_name: string, ...titles: string[]): Promise<Map<string, number>> {
+    public async get_active_ids(table_name: string, ...titles: string[]): Promise<Map<string, number>> {
         titles = Array.from(new Set(titles));
 
         if (titles.length === 0) return new Map<string, number>();
@@ -66,67 +73,65 @@ export class DatabaseManager {
             `SELECT title, id 
             FROM ${table_name} 
             WHERE title IN (${where_clause}) AND deleted = 0;`,
-            (obj: any) => { return { key: obj.title, value: obj.id }; },
+            (obj) => { return { key: obj["title"] as string, value: obj["id"] as number }; },
             titles
         );
 
         return new Map(category_ids.map(({ key, value }) => [key, value]));
     }
 
-    private async add_objects(table_name: string, objects: { title: string }[]): Promise<void> {
+    private async add_generic_objects<K extends string>(table_name: string, objects: ({ title: string } & Record<K, SqlValue>)[], properties: K[]): Promise<void> {
         const titles = objects.map(obj => obj.title);
-        const active_titles = await this.get_ids(table_name, ...titles);
+        const active_titles = await this.get_active_ids(table_name, ...titles);
+
         if (active_titles.size > 0) {
             throw new Error(`The following ${table_name} already exist and are not deleted: ${Array.from(active_titles.keys()).join(", ")}.`);
         }
+        if (new Set(titles).size != titles.length) {
+            throw new Error("Trying to add duplicate titles");
+        }
 
-        const properties = Object.keys(objects[0]);
-        const id_loc = properties.indexOf("id");
-        if (id_loc !== -1) properties.splice(id_loc, 1);
         const values_clause = objects.map(() => `(${properties.map(() => "?").join(", ")})`).join(", ");
-        const values = objects.flatMap(obj => properties.map(prop => (obj as any)[prop]));
-        const set_clause = properties.map(prop => `${prop} = excluded.${prop}`).join(", ");
+        const values = objects.flatMap(obj => properties.map(prop => obj[prop]));
 
         await this.db_driver.run(
             `INSERT INTO ${table_name}
             (${properties.join(", ")})
-            VALUES ${values_clause}
-            ON CONFLICT (title) DO UPDATE
-            SET deleted = 0,
-                ${set_clause};`,
+            VALUES ${values_clause}`,
             values
         );
     }
 
-    private async remove_object(table_name: string, title: string, dependent_identifier: string): Promise<void> {
-        const no_linking_items = await this.db_driver.query<number>(
-            `SELECT COUNT(*) AS count 
-            FROM items AS I
-            WHERE I.${dependent_identifier} = (SELECT id FROM ${table_name} WHERE title = :title)
-            AND I.remove_date IS NULL;`,
-            (obj: any) => obj.count as number,
-            { ":title": title }
+    private async remove_generic_object(table_name: string, title: string, dependent_identifier: string): Promise<number> {
+        const id = DatabaseManager.id_lookup(await this.get_active_ids(table_name, title), title);
+
+        const linking_items = await this.db_driver.query<number>(
+            `SELECT COUNT(*) AS count
+            FROM items
+            WHERE ${dependent_identifier} = :id AND remove_date IS NULL;`,
+            (obj) => obj["count"] as number,
+            { ":id": id }
         );
 
-        if (no_linking_items[0] == 0) {
-            await this.db_driver.run(
-                `UPDATE ${table_name}
-                SET deleted = 1
-                WHERE title = :title;`,
-                { ":title": title }
-            );
-        }
-        else {
+        if (linking_items[0] !== 0) {
             throw new Error(`Cannot delete object "${title}" because it is linked to existing items.`);
         }
+
+        await this.db_driver.run(
+            `UPDATE ${table_name}
+            SET deleted = 1
+            WHERE id = :id;`,
+            { ":id": id }
+        );
+        return id;
     }
 
     public async add_categories(...categories: Category[]): Promise<void> {
-        await this.add_objects("categories", categories);
+        await this.add_generic_objects("categories", categories, ["title", "weight"]);
     }
 
     public async remove_category(title: string): Promise<void> {
-        await this.remove_object("categories", title, "category_id");
+        await this.remove_generic_object("categories", title, "category_id");
     }
 
     public async get_categories(): Promise<Category[]> {
@@ -135,21 +140,21 @@ export class DatabaseManager {
             FROM categories 
             WHERE deleted = 0
             ORDER BY title ASC;`,
-            (obj: any) => { return { id: obj.id as number, title: obj.title as string, weight: obj.weight as number | null } }
+            (obj) => { return { id: obj["id"] as number, title: obj["title"] as string, weight: obj["weight"] as number | null } }
         );
     }
 
     public async add_items(...item: Item[]): Promise<void> {
         if (item.length === 0) return;
 
-        const category_map = await this.get_ids("categories", ...item.map(i => i.category));
+        const category_map = await this.get_active_ids("categories", ...item.map(i => i.category));
         for (const i of item) {
             if (!category_map.has(i.category)) {
                 throw new Error(`Category "${i.category}" does not exist.`);
             }
         }
 
-        const box_map = await this.get_ids("boxes", ...item.map(i => i.box));
+        const box_map = await this.get_active_ids("boxes", ...item.map(i => i.box));
         for (const i of item) {
             if (!box_map.has(i.box)) {
                 throw new Error(`Box "${i.box}" does not exist.`);
@@ -177,20 +182,20 @@ export class DatabaseManager {
 
     public async update_item(id: number, args: Partial<Item>): Promise<void> {
         const { category, box, id: _id, ...rest } = args;
-        const update_obj: Record<string, any> = { ...rest };
+        const update_obj: Record<string, SqlValue | undefined> = { ...rest };
 
         if (category !== undefined) {
-            const category_map = await this.get_ids("categories", category);
+            const category_map = await this.get_active_ids("categories", category);
             update_obj["category_id"] = DatabaseManager.id_lookup(category_map, category);
         }
 
         if (box !== undefined) {
-            const box_map = await this.get_ids("boxes", box);
+            const box_map = await this.get_active_ids("boxes", box);
             update_obj["box_id"] = DatabaseManager.id_lookup(box_map, box);
         }
 
         const entries = Object.entries(update_obj).filter(
-            ([_, val]) => val !== undefined
+            (entry): entry is [string, SqlValue] => entry[1] !== undefined
         );
 
         if (entries.length === 0) return;
@@ -209,7 +214,7 @@ export class DatabaseManager {
 
     public async get_items(category: string): Promise<Item[]> {
         return await this.db_driver.query<Item>(
-            `SELECT I.*, B.title as box, C.title AS category
+            `SELECT I.id, I.expiration_date, I.status, B.title AS box, C.title AS category
             FROM items AS I
             LEFT JOIN categories AS C ON I.category_id = C.id 
             LEFT JOIN boxes AS B ON I.box_id = B.id
@@ -225,21 +230,26 @@ export class DatabaseManager {
             FROM boxes
             WHERE deleted = 0
             ORDER BY title ASC;`,
-            (obj: any) => { return { id: obj.id as number, title: obj.title as string, max_load: isNaN(Number(obj.max_load)) ? null : Number(obj.max_load) }; }
+            (obj) => {
+                return {
+                    id: obj["id"] as number,
+                    title: obj["title"] as string,
+                    max_load: isNaN(Number(obj["max_load"])) ? null : Number(obj["max_load"])
+                };
+            }
         );
     }
 
     public async add_boxes(...boxes: Box[]): Promise<void> {
-        await this.add_objects("boxes", boxes);
+        await this.add_generic_objects("boxes", boxes, ["title", "max_load"]);
     }
 
     public async remove_box(box: string): Promise<void> {
-        await this.remove_object("boxes", box, "box_id");
+        const id = await this.remove_generic_object("boxes", box, "box_id");
         await this.db_driver.run(
-            `DELETE FROM box_adjacency 
-            WHERE v = (SELECT id FROM boxes WHERE title = :box) 
-            OR u = (SELECT id FROM boxes WHERE title = :box);`,
-            { ":box": box }
+            `DELETE FROM box_adjacency
+            WHERE v = :id OR u = :id;`,
+            { ":id": id }
         ); // cascade delete box connections
     }
 
@@ -249,8 +259,9 @@ export class DatabaseManager {
             FROM boxes AS B
             LEFT JOIN items AS I ON B.id = I.box_id AND I.remove_date IS NULL
             LEFT JOIN categories AS C ON I.category_id = C.id
+            WHERE B.deleted = 0
             GROUP BY B.id`,
-            (obj: any) => { return { box: obj.box as string, total_weight: obj.total_weight as number }; }
+            (obj) => { return { box: obj["box"] as string, total_weight: obj["total_weight"] as number }; }
         );
     }
 
@@ -292,7 +303,7 @@ export class DatabaseManager {
         const edges = await this.db_driver.query<{ v: number, u: number }>(
             `SELECT v, u
             FROM box_adjacency;`,
-            (obj: any) => { return { v: obj.v as number, u: obj.u as number }; }
+            (obj) => { return { v: obj["v"] as number, u: obj["u"] as number }; }
         );
 
         return edges;

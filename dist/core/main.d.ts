@@ -9,9 +9,9 @@ export declare class DatabaseManager {
     constructor(db_driver: IDatabaseDriver, now?: () => number);
     init_tables(): Promise<void>;
     private static id_lookup;
-    get_ids(table_name: string, ...titles: string[]): Promise<Map<string, number>>;
-    private add_objects;
-    private remove_object;
+    get_active_ids(table_name: string, ...titles: string[]): Promise<Map<string, number>>;
+    private add_generic_objects;
+    private remove_generic_object;
     add_categories(...categories: Category[]): Promise<void>;
     remove_category(title: string): Promise<void>;
     get_categories(): Promise<Category[]>;

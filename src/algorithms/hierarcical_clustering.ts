@@ -27,11 +27,11 @@ export function cluster(edges: { to: number, weight: number }[][]): Merge[] {
 
     // add the zero edges as they may be more optimal then the negative ones, but do not show up in the queue
     for (let v = 0; v < n; v++) {
-        for (let u = 0; u < n; u++) {
+        for (let u = v + 1; u < n; u++) {
             queue.push({ v: v, u: u, gen_v: 0, gen_u: 0, similarity: weights[v][u] });
         }
     }
-    
+
     heapify(queue, comparator);
 
     while (true) {

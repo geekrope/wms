@@ -14,7 +14,7 @@ export class Analytics {
     constructor(private db_driver: IDatabaseDriver, private manager: DatabaseManager) { }
 
     private async resolve_category_id(category: string): Promise<number> {
-        const id = (await this.manager.get_ids("categories", category)).get(category);
+        const id = (await this.manager.get_active_ids("categories", category)).get(category);
         if (id === undefined) throw new Error(`Category "${category}" not found`);
         return id;
     }
@@ -37,7 +37,7 @@ export class Analytics {
             END AS streak
             FROM lagged
             WHERE date IS NOT prev_exp;`,
-            (obj: any) => Number(obj.streak));
+            (obj) => Number(obj["streak"]));
     }
 
     public async get_max_past_streak() {
@@ -58,8 +58,8 @@ export class Analytics {
             )
             SELECT start, MAX(CAST(julianday(end) - julianday(start) AS INTEGER)) AS streak
             FROM intervals;`,
-            (obj: any) => {
-                return { value: Number(obj.streak), start: new Date(obj.start) };
+            (obj) => {
+                return { value: Number(obj["streak"]), start: new Date(obj["start"] as string) };
             });
     }
 
@@ -78,7 +78,7 @@ export class Analytics {
             FROM raw as R
             GROUP BY date(R.date / 1000, 'unixepoch')
             ORDER BY date;`,
-            (obj: any) => ({ date: obj.date as number, delta: obj.delta as number }),
+            (obj) => ({ date: obj["date"] as number, delta: obj["delta"] as number }),
             { ":category_id": category_id });
 
         return { dates: zipped.map((val) => val.date), deltas: zipped.map((val) => val.delta) }
@@ -99,7 +99,7 @@ export class Analytics {
             JOIN items AS I ON date(I.remove_date / 1000, 'unixepoch') = T.date
             GROUP BY T.date
             ORDER BY T.date;`,
-            (obj: any) => ({ date: new Date(`${obj.date}T00:00:00Z`), count: obj.count as number }),
+            (obj) => ({ date: new Date(`${obj["date"]}T00:00:00Z`), count: obj["count"] as number }),
             { ":begin": begin, ":end": end });
     }
 
@@ -132,7 +132,7 @@ export class Analytics {
                 GROUP BY C.title
                 HAVING count > 0
                 ORDER BY count DESC;`,
-            (obj) => { return { category: obj.title as string, count: obj.count as number }; },
+            (obj) => { return { category: obj['title'] as string, count: obj['count'] as number }; },
             params
         )
     }
@@ -171,7 +171,7 @@ export class Analytics {
             FROM lift AS l
             JOIN categories AS c1 ON l.cat1 = c1.id
             JOIN categories AS c2 ON l.cat2 = c2.id`,
-            (obj) => { return { title1: obj.title1 as string, title2: obj.title2 as string, lift: obj.lift as number } },
+            (obj) => { return { title1: obj['title1'] as string, title2: obj['title2'] as string, lift: obj['lift'] as number } },
             [threshold]);
     }
 }

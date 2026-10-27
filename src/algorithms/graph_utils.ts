@@ -26,7 +26,6 @@ export class EntryNode<T> extends Node<T> {
 
 export type AdjacencyList<T = number> = { v: T, u: T }[];
 
-// TODO: Kahn algorithm
 function topological_sort_aux<T>(entry: Node<T>, result: Node<T>[], visited: Set<Node<T>>) {
     if (visited.has(entry)) return;
     visited.add(entry);
@@ -36,10 +35,39 @@ function topological_sort_aux<T>(entry: Node<T>, result: Node<T>[], visited: Set
     result.push(entry);
 }
 
-function topological_sort<T>(entry: Node<T>) {
-    const result: Node<T>[] = [];
-    topological_sort_aux(entry, result, new Set<Node<T>>());
-    return result.reverse().map((value, index) => [index, value] as [number, Node<T>]);
+function topological_sort<T>(entry: Node<T>, method: "recursive" | "kahn" = "kahn") {
+    if (method == "recursive") {
+        const result: Node<T>[] = [];
+        topological_sort_aux(entry, result, new Set<Node<T>>());
+        return result.reverse().map((value, index) => [index, value] as [number, Node<T>]);
+    }
+    else {
+        const in_degree: Map<Node<T>, number> = new Map();
+        const queue: Node<T>[] = [entry];
+        let head = 0;
+
+        in_degree.set(entry, 0);
+
+        while (head < queue.length) {
+            const top = queue[head];
+            head++;
+
+            for (const child of top.successors) {
+                if (in_degree.has(child)) {
+                    in_degree.set(child, in_degree.get(child)! - 1);
+                }
+                else {
+                    in_degree.set(child, child.predecessors.size - 1);
+                }
+
+                if (in_degree.get(child) == 0) {
+                    queue.push(child);
+                }
+            }
+        }
+
+        return queue.map((value, index) => [index, value] as [number, Node<T>]);
+    }
 }
 
 function union<T>(a: [number, T][], b: [number, T][]) {

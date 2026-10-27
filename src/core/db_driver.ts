@@ -1,7 +1,7 @@
 import type { IPersistenceAdapter } from "./persistence.js";
-import type { BindParams, Database, QueryExecResult } from "sql.js";
+import type { BindParams, Database, QueryExecResult, SqlValue } from "sql.js";
 
-export type Constructor<T> = (...args: any[]) => T;
+export type Constructor<T> = (args: Record<string, SqlValue>) => T;
 
 export interface IDatabaseDriver {
     query_raw(sql: string, params?: BindParams): Promise<QueryExecResult[]>;
@@ -34,10 +34,10 @@ export class SqlJsDriver implements IDatabaseDriver {
         const results = await this.db.exec(sql, params);
         if (results.length === 0) return [];
 
-        const { columns, values } = results[0];   
+        const { columns, values } = results[0];
 
         return values.map((row) => {
-            const obj: Record<string, any> = {};
+            const obj: Record<string, SqlValue> = {};
 
             columns.forEach((col: string, index: number) => {
                 obj[col] = row[index];
@@ -51,7 +51,7 @@ export class SqlJsDriver implements IDatabaseDriver {
         await this.enable_foreign_keys()  // enable foreign key constraints, as it automatically disables on every update.        
         await this.assert_foreign_keys_enabled();
         await this.db.run(sql, params);
-        await this.save();        
+        await this.save();
     }
 
     public async save(): Promise<void> {

@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { Bitset } from "../algorithms/bitset.js";
 
-test("test bitset page overflow", () => {
+test("bitset page overflow", () => {
     const bitset = new Bitset();
 
     bitset.set_bit(64); // make a bitset allocate one intermediate page
@@ -10,7 +10,7 @@ test("test bitset page overflow", () => {
     assert.equal(bitset.read_bit(64), 1);
 })
 
-test("test bitset or broadcasting", () => {
+test("bitset or broadcasting", () => {
     const bitset1 = new Bitset();
     const bitset2 = new Bitset();
 
@@ -31,7 +31,7 @@ test("test bitset or broadcasting", () => {
     assert.equal(or.read_bit(0), 0);
 })
 
-test("test bitset or commutativity", () => {
+test("bitset or commutativity", () => {
     const shorter = new Bitset();
     const longer = new Bitset();
 
@@ -46,7 +46,7 @@ test("test bitset or commutativity", () => {
     assert.deepEqual(longer.or(shorter).apply(Array(128).fill(0).map((_, i) => i)), [3, 31, 40, 96]);
 })
 
-test("test bitset apply", () => {
+test("bitset apply", () => {
     const array = Array(32).fill(0).map((_, i) => i);
     const bitset = new Bitset();
 
@@ -57,7 +57,7 @@ test("test bitset apply", () => {
     assert.deepEqual(bitset.apply(array), [15, 16, 20]);
 })
 
-test("test bitset apply broadcasting", () => {
+test("bitset apply broadcasting", () => {
     const array = Array(32).fill(0).map((_, i) => i);
     const bitset = new Bitset();
 
@@ -69,7 +69,7 @@ test("test bitset apply broadcasting", () => {
     assert.deepEqual(bitset.apply(array), [15, 16, 20]);
 })
 
-test("test bitset duplicate set", () => {
+test("bitset duplicate set", () => {
     const bitset = new Bitset();
 
     bitset.set_bit(16);
@@ -79,7 +79,7 @@ test("test bitset duplicate set", () => {
     assert.equal(bitset.data[0], 1 << 16);
 })
 
-test("test bitset sign bit", () => {
+test("bitset sign bit", () => {
     const array = Array(40).fill(0).map((_, i) => i);
     const bitset = new Bitset();
 
@@ -93,7 +93,7 @@ test("test bitset sign bit", () => {
     assert.deepEqual(bitset.apply(array), [31, 32]);
 })
 
-test("test bitset read out of range", () => {
+test("bitset read out of range", () => {
     const bitset = new Bitset();
 
     assert.equal(bitset.read_bit(1000), 0);

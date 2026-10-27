@@ -6,6 +6,7 @@ import { DatabaseManager } from "../core/main.js";
 import { SqlJsDriver } from "../core/db_driver.js";
 import { DummyPersistenceAdapter } from "../core/persistence.js";
 import { Item } from "../core/types.js";
+import type { BindParams, SqlValue } from "sql.js";
 
 const require = createRequire(import.meta.url);
 const initSqlJs: typeof import("sql.js") = require("../../src/modules/sql-wasm.js");
@@ -20,12 +21,12 @@ async function create_manager(now: () => number = Date.now): Promise<DatabaseMan
     return manager;
 }
 
-async function scalar(manager: DatabaseManager, sql: string, params: any[] = []): Promise<any> {
+async function scalar(manager: DatabaseManager, sql: string, params: BindParams = []): Promise<SqlValue | undefined> {
     return (await manager.execute_raw(sql, params))[0]?.values[0]?.[0];
 }
 
 async function live_id(manager: DatabaseManager, table: string, title: string): Promise<number> {
-    return (await manager.get_ids(table, title)).get(title)!;
+    return (await manager.get_active_ids(table, title)).get(title)!;
 }
 
 // categories: Tuna 200, Milk 1000, Salt (no weight), Corned beef 340 (no items)
@@ -46,7 +47,7 @@ async function create_fixture(now: () => number = Date.now): Promise<DatabaseMan
         { id: undefined, title: "Bottom", max_load: null }
     );
 
-    const boxes = await manager.get_ids("boxes", "Top", "Middle", "Bottom");
+    const boxes = await manager.get_active_ids("boxes", "Top", "Middle", "Bottom");
     await manager.add_box_connections([
         { v: boxes.get("Top")!, u: boxes.get("Middle")! },
         { v: boxes.get("Middle")!, u: boxes.get("Bottom")! }
@@ -141,7 +142,7 @@ test("add_items and update_item link to the live row of a re-added category", as
 
     const linked = await manager.execute_raw(`
         SELECT DISTINCT category_id FROM items 
-        WHERE category_id IN (SELECT id FROM categories WHERE title = ?);`, 
+        WHERE category_id IN (SELECT id FROM categories WHERE title = ?);`,
         ["Corned beef"]);
 
     assert.deepEqual(linked[0].values, [[new_id]]);
@@ -175,6 +176,13 @@ test("removing a re-added box deletes only its own edges", async () => {
     const edges = await manager.get_box_adjacency();
     assert.equal(edges.length, 2);
     assert.ok(!edges.some(e => e.v === spare || e.u === spare));
+});
+
+test("a box whose removal is rejected keeps its edges", async () => {
+    const manager = await create_fixture();
+
+    await assert.rejects(() => manager.remove_box("Top"), /linked to existing items/);
+    assert.equal((await manager.get_box_adjacency()).length, 2);
 });
 
 test("removing a title that doesn't exist throws", async () => {
@@ -212,3 +220,18 @@ test("duplicate titles in one call are rejected and nothing is inserted", async 
     assert.equal(await scalar(manager, "SELECT COUNT(*) FROM categories WHERE title = 'Rice';"), 0);
     assert.equal(await scalar(manager, "SELECT COUNT(*) FROM boxes WHERE title = 'Shelf';"), 0);
 });
+
+for (const [table, title] of [["categories", "Tuna"], ["boxes", "Top"]] as const) {
+    test(`database creates unique index on ${table} titles`, async () => {
+        const manager = await create_fixture();
+
+        await assert.rejects(
+            () => manager.run_raw(`INSERT INTO ${table} (title) VALUES (?);`, [title]),
+            /UNIQUE constraint failed/
+        );
+
+        // check that removed categories are unaffected
+        await manager.run_raw(`UPDATE ${table} SET deleted = 1 WHERE title = ?;`, [title]);
+        await manager.run_raw(`INSERT INTO ${table} (title) VALUES (?);`, [title]);
+    });
+}
